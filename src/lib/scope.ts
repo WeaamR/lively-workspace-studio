@@ -83,3 +83,34 @@ export function composeChangeResponse(
   parts.push("", "يسعدني الإجابة عن أي استفسار.", "", "مع التحية،", freelancerName);
   return parts.join("\n");
 }
+
+const AR_MONTHS = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+const WEEKDAYS: Array<{ re: RegExp; day: number; ar: string }> = [
+  { re: /الأحد|الاحد|sunday/i, day: 0, ar: "الأحد" },
+  { re: /الاثنين|الإثنين|monday/i, day: 1, ar: "الاثنين" },
+  { re: /الثلاثاء|tuesday/i, day: 2, ar: "الثلاثاء" },
+  { re: /الأربعاء|الاربعاء|wednesday/i, day: 3, ar: "الأربعاء" },
+  { re: /الخميس|thursday/i, day: 4, ar: "الخميس" },
+  { re: /الجمعة|friday/i, day: 5, ar: "الجمعة" },
+  { re: /السبت|saturday/i, day: 6, ar: "السبت" },
+];
+
+/**
+ * A weekday mentioned without an exact date is NOT a confirmed deadline.
+ * Returns the nearest matching upcoming date only as a clarification question.
+ */
+export function detectWeekdayDeadline(
+  request: string,
+  fromIso: string,
+): { weekday: string; suggestedDate: string; question: string } | null {
+  const hit = WEEKDAYS.find((w) => w.re.test(request));
+  if (!hit) return null;
+  const base = new Date(fromIso);
+  const d = new Date(Date.UTC(base.getUTCFullYear(), base.getUTCMonth(), base.getUTCDate()));
+  let diff = (hit.day - d.getUTCDay() + 7) % 7;
+  if (diff === 0) diff = 7;
+  d.setUTCDate(d.getUTCDate() + diff);
+  const suggestedDate = d.toISOString().slice(0, 10);
+  const question = `هل تقصد يوم ${hit.ar} ${d.getUTCDate()} ${AR_MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}؟`;
+  return { weekday: hit.ar, suggestedDate, question };
+}

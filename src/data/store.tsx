@@ -7,7 +7,7 @@
 import { createContext, useContext, useEffect, useMemo, useReducer, useRef, type ReactNode } from "react";
 
 import { newId, nowIso } from "@/lib/format";
-import { latestVersion } from "@/lib/scope";
+import { detectWeekdayDeadline, latestVersion } from "@/lib/scope";
 import type {
   AppData,
   Attachment,
@@ -153,6 +153,8 @@ function useCreateActions(dispatch: React.Dispatch<Parameters<typeof reducer>[1]
           status: "draft",
           delivery_deadline: prev?.delivery_deadline ?? null,
           revision_rounds: prev?.revision_rounds ?? service?.revision_limit ?? 2,
+          deadline_status: prev?.deadline_status,
+          deadline_note: prev?.deadline_note,
           notes: "",
           created_at: at,
           sent_at: null,
@@ -164,9 +166,22 @@ function useCreateActions(dispatch: React.Dispatch<Parameters<typeof reducer>[1]
             .filter((i) => i.scope_version_id === prev.id)
             .map((i) => ({ ...i, id: newId(), scope_version_id: versionId }));
         } else {
+          // Only terms explicitly defined by the service profile or the client's own words.
+          const pendingDate = project ? detectWeekdayDeadline(project.original_request, project.created_at) : null;
+          if (pendingDate) {
+            version.deadline_status = "pending_clarification";
+            version.deadline_note = pendingDate.question;
+          }
+          const openItems = [
+            ...(pendingDate ? [`موعد التسليم: ذكر العميل يوم ${pendingDate.weekday} دون تأكيد التاريخ — ${pendingDate.question}`] : []),
+            ...(project?.analysis?.missing ?? []),
+            ...(project?.analysis?.ambiguous ?? []),
+          ];
           const seed: Array<[ScopeCategory, string[]]> = [
             ["deliverable", service?.deliverables ?? []],
+            ["included", service?.inclusions ?? []],
             ["excluded", service?.exclusions ?? []],
+            ["open_item", openItems],
           ];
           items = seed.flatMap(([category, list]) =>
             list.map((content, position) => ({ id: newId(), scope_version_id: versionId, category, content, position })),
@@ -178,7 +193,7 @@ function useCreateActions(dispatch: React.Dispatch<Parameters<typeof reducer>[1]
 
       updateScopeVersion(
         id: string,
-        patch: Partial<Pick<ScopeVersion, "delivery_deadline" | "revision_rounds" | "notes">>,
+        patch: Partial<Pick<ScopeVersion, "delivery_deadline" | "revision_rounds" | "notes" | "deadline_status" | "deadline_note">>,
       ) {
         dispatch({ type: "scope/update", id, patch });
       },
@@ -191,6 +206,28 @@ function useCreateActions(dispatch: React.Dispatch<Parameters<typeof reducer>[1]
 
       revertScopeToDraft(id: string) {
         dispatch({ type: "scope/revertToDraft", id });
+      },
+
+      /** Saves the current draft as a new draft version; the previous draft is kept as history. Never sends or approves. */
+      saveScopeDraft(id: string) {
+        const from = state.scopeVersions.find((x) => x.id === id);
+        if (!from || from.status !== "draft") return null;
+        const prev = latestVersion(state.scopeVersions, from.project_id);
+        const versionId = newId();
+        const version: ScopeVersion = {
+          ...from,
+          id: versionId,
+          version_number: (prev?.version_number ?? from.version_number) + 1,
+          status: "draft",
+          created_at: nowIso(),
+          sent_at: null,
+          approved_at: null,
+        };
+        const items = state.scopeItems
+          .filter((i) => i.scope_version_id === id)
+          .map((i) => ({ ...i, id: newId(), scope_version_id: versionId }));
+        dispatch({ type: "scope/saveAsNew", fromId: id, version, items });
+        return version.version_number;
       },
 
       approveScope(id: string) {

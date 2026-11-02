@@ -27,6 +27,8 @@ export interface Service {
   description: string;
   deliverables: string[];
   exclusions: string[];
+  /** Services explicitly included in the price. Optional for older saved data. */
+  inclusions?: string[];
   revision_limit: number;
   delivery_days: number;
   pricing_model: PricingModel;
@@ -116,6 +118,10 @@ export interface ScopeVersion {
   status: ScopeStatus;
   delivery_deadline: string | null;
   revision_rounds: number;
+  /** Whether the client confirmed the exact delivery date. Missing = confirmed if a date is set. */
+  deadline_status?: "confirmed" | "pending_clarification";
+  /** Clarification question / note shown while the date is unconfirmed. */
+  deadline_note?: string;
   notes: string;
   created_at: string;
   sent_at: string | null;
@@ -127,7 +133,8 @@ export type ScopeCategory =
   | "included"
   | "excluded"
   | "client_responsibility"
-  | "condition";
+  | "condition"
+  | "open_item";
 
 export interface ScopeItem {
   id: ID;
