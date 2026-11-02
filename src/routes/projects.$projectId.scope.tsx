@@ -148,8 +148,30 @@ function ScopePage() {
               type="date"
               disabled={!editable}
               value={version.delivery_deadline ?? ""}
-              onChange={(e) => actions.updateScopeVersion(version.id, { delivery_deadline: e.target.value || null })}
+              onChange={(e) =>
+                actions.updateScopeVersion(version.id, {
+                  delivery_deadline: e.target.value || null,
+                  deadline_status: e.target.value ? "confirmed" : version.deadline_status,
+                })
+              }
             />
+            {version.deadline_status === "pending_clarification" && (
+              <div className="rounded-md border border-warning/40 bg-warning-soft p-2.5 text-xs leading-relaxed">
+                <div className="font-semibold">بانتظار التوضيح — التاريخ غير مؤكد</div>
+                {version.deadline_note && <div className="mt-1">سؤال مقترح للعميل: {version.deadline_note}</div>}
+                {editable && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="mt-2 h-7"
+                    disabled={!version.delivery_deadline}
+                    onClick={() => actions.updateScopeVersion(version.id, { deadline_status: "confirmed" })}
+                  >
+                    تأكيد التاريخ بعد رد العميل
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="revisions">عدد جولات التعديل</Label>
@@ -181,7 +203,7 @@ function ScopePage() {
           {SCOPE_CATEGORY_ORDER.map((category, idx) => {
             const list = itemsByCategory(items, category);
             return (
-              <section key={category} className={cn("surface-card p-5", category === "condition" && "xl:col-span-2")}>
+              <section key={category} className={cn("surface-card p-5", category === "open_item" && "border-warning/40 xl:col-span-2")}>
                 <div className="mb-3 flex items-start gap-3">
                   <span className="num flex size-7 shrink-0 items-center justify-center rounded-md bg-primary text-xs font-semibold text-primary-foreground">
                     {idx + 1}
@@ -207,7 +229,7 @@ function ScopePage() {
                   onUpdate={(id, c) => actions.updateScopeItem(id, c)}
                   onRemove={(id) => actions.removeScopeItem(id)}
                   placeholder="أضف بندًا…"
-                  emptyText="لا توجد بنود."
+                  emptyText={EMPTY_TEXT[category]}
                 />
               </section>
             );
@@ -218,13 +240,28 @@ function ScopePage() {
   );
 }
 
+const EMPTY_TEXT: Record<string, string> = {
+  deliverable: "لم تُحدَّد مخرجات في ملف الخدمة بعد.",
+  included: "لم تُحدَّد خدمات مشمولة صراحةً في ملف الخدمة — أضفها هنا أو في ملفك المهني.",
+  excluded: "لم تُحدَّد استثناءات بعد.",
+  client_responsibility: "بانتظار تحديد المواد المطلوبة من العميل",
+  condition: "لم تُحدَّد شروط بعد.",
+  open_item: "لا توجد نقاط معلّقة — جميع البنود أعلاه مؤكدة.",
+};
+
 function VersionActions({ version, itemCount }: { version: ScopeVersion; itemCount: number }) {
   const actions = useActions();
 
   if (version.status === "draft") {
     return (
       <div className="flex flex-wrap gap-2">
-        <Button variant="outline" onClick={() => toast.success(`حُفظت مسودة النسخة ${version.version_number}`)}>
+        <Button
+          variant="outline"
+          onClick={() => {
+            const n = actions.saveScopeDraft(version.id);
+            if (n) toast.success(`حُفظت المسودة كنسخة جديدة رقم ${n}`, { description: "لم يُرسل النطاق ولم يُعتمد." });
+          }}
+        >
           <Save />
           حفظ المسودة
         </Button>
