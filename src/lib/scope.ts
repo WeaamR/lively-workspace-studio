@@ -111,6 +111,6 @@ export function detectWeekdayDeadline(
   if (diff === 0) diff = 7;
   d.setUTCDate(d.getUTCDate() + diff);
   const suggestedDate = d.toISOString().slice(0, 10);
-  const question = `هل تقصد يوم ${hit.ar} ${d.getUTCDate()} ${AR_MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}؟`;
+  const question = `هل تقصد يوم ${hit.ar} الموافق ${d.getUTCDate()} ${AR_MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}؟`;
   return { weekday: hit.ar, suggestedDate, question };
 }
