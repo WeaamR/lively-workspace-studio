@@ -142,8 +142,8 @@ function ProjectsPage() {
               const v = latestVersion(scopeVersions, p.id);
               const service = services.find((s) => s.id === p.service_id);
               return (
-                <li key={p.id} className="grid grid-cols-1 gap-2 px-5 py-4 transition-colors hover:bg-muted/40 md:grid-cols-12 md:items-center md:gap-4">
-                  <Link to="/projects/$projectId" params={{ projectId: p.id }} className="min-w-0 md:col-span-5">
+                <li key={p.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5 py-4 transition-colors hover:bg-muted/40 md:grid md:grid-cols-12 md:gap-4">
+                  <Link to="/projects/$projectId" params={{ projectId: p.id }} className="w-full min-w-0 md:col-span-5 md:w-auto">
                     <div className="flex items-center gap-2">
                       <span className="truncate text-sm font-medium text-foreground hover:text-primary">{p.title}</span>
                       {p.is_demo && <DemoBadge label="تجريبي" />}
@@ -167,7 +167,7 @@ function ProjectsPage() {
                     {v ? `النسخة ${v.version_number} · ${SCOPE_STATUS_LABEL[v.status]}` : "لم يُنشأ بعد"}
                   </div>
                   <div className="num text-xs text-muted-foreground md:col-span-2">{formatDate(p.updated_at)}</div>
-                  <div className="flex justify-end md:col-span-1">
+                  <div className="ms-auto flex justify-end md:col-span-1 md:ms-0">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="size-8" aria-label="خيارات المشروع">
