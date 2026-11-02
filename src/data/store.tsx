@@ -7,7 +7,7 @@
 import { createContext, useContext, useEffect, useMemo, useReducer, useRef, type ReactNode } from "react";
 
 import { newId, nowIso } from "@/lib/format";
-import { detectWeekdayDeadline, latestVersion } from "@/lib/scope";
+import { detectWeekdayDeadline, latestVersion, repairScopeData } from "@/lib/scope";
 import type {
   AppData,
   Attachment,
@@ -268,7 +268,7 @@ const DataContext = createContext<AppData | null>(null);
 const ActionsContext = createContext<Actions | null>(null);
 
 export function AppDataProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, initialData);
+  const [state, dispatch] = useReducer(reducer, initialData, repairScopeData);
   const hydrated = useRef(false);
 
   // Load persisted demo data after mount (keeps SSR and first client render identical).

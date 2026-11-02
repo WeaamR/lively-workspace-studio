@@ -2,6 +2,7 @@
  * Pure state transitions for the local (phase 1) store.
  * Each action maps 1:1 to a future Supabase mutation.
  */
+import { repairScopeData } from "@/lib/scope";
 import type {
   AppData,
   Profile,
@@ -39,7 +40,7 @@ function isDraft(state: AppData, versionId: string): boolean {
 export function reducer(state: AppData, action: Action): AppData {
   switch (action.type) {
     case "data/replace":
-      return action.data;
+      return repairScopeData(action.data);
 
     case "profile/update":
       return { ...state, profile: { ...state.profile, ...action.patch } };
