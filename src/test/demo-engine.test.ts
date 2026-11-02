@@ -21,7 +21,7 @@ describe("demo engine", () => {
   it("includes the motion graphics demo service with 2 revisions and exclusions", () => {
     const s = initialData.services.find((x) => x.id === "svc-motion")!;
     expect(s.revision_limit).toBe(2);
-    expect(s.exclusions).toEqual(["التعليق الصوتي", "ملفات المشروع المصدرية"]);
+    expect(s.exclusions).toEqual(["تسجيل التعليق الصوتي", "ملفات المشروع المصدرية"]);
     expect(s.deliverables[0]).toContain("1080×1920");
   });
 });
