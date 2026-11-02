@@ -146,7 +146,7 @@ export function repairScopeData(data: AppData): AppData {
         },
       ];
     }
-    return { ...v, delivery_deadline: null, deadline_status: "pending_clarification" as const, deadline_note: pending.question };
+    return { ...v, deadline_status: "pending_clarification" as const, deadline_note: pending.question };
   });
   return { ...data, services, scopeItems, scopeVersions };
 }
