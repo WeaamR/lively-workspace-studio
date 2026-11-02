@@ -1,0 +1,246 @@
+/**
+ * App data provider (phase 1: in-memory, seeded with demo data).
+ *
+ * Components only use `useAppData()` / `useActions()`. In phase 2 the
+ * internals are swapped for Supabase + TanStack Query; the hook surface stays.
+ */
+import { createContext, useContext, useMemo, useReducer, type ReactNode } from "react";
+
+import { newId, nowIso } from "@/lib/format";
+import { latestVersion } from "@/lib/scope";
+import type {
+  AppData,
+  Attachment,
+  ChangeAnalysis,
+  MessageAuthor,
+  MessageKind,
+  Profile,
+  Project,
+  RequestAnalysis,
+  ScopeCategory,
+  ScopeItem,
+  ScopeVersion,
+  Service,
+} from "@/lib/types";
+import { emitAutomationEvent } from "@/services/automation";
+
+import { DEMO_USER_ID, initialData } from "./mock-data";
+import { reducer } from "./reducer";
+
+export interface NewProjectInput {
+  title: string;
+  client_name: string;
+  service_id: string | null;
+  original_request: string;
+  attachments: Attachment[];
+}
+
+function useCreateActions(dispatch: React.Dispatch<Parameters<typeof reducer>[1]>, state: AppData) {
+  return useMemo(
+    () => ({
+      updateProfile(patch: Partial<Profile>) {
+        dispatch({ type: "profile/update", patch });
+      },
+
+      saveService(service: Omit<Service, "id" | "user_id" | "created_at"> & { id?: string }) {
+        const existing = service.id ? state.services.find((s) => s.id === service.id) : undefined;
+        const full: Service = {
+          ...service,
+          id: existing?.id ?? newId(),
+          user_id: DEMO_USER_ID,
+          created_at: existing?.created_at ?? nowIso(),
+        };
+        dispatch({ type: "service/upsert", service: full });
+        return full.id;
+      },
+
+      deleteService(id: string) {
+        dispatch({ type: "service/delete", id });
+      },
+
+      createProject(input: NewProjectInput) {
+        const at = nowIso();
+        const id = newId();
+        const project: Project = {
+          id,
+          user_id: DEMO_USER_ID,
+          service_id: input.service_id,
+          title: input.title.trim(),
+          client_name: input.client_name.trim(),
+          status: "pending",
+          original_request: input.original_request.trim(),
+          attachments: input.attachments,
+          analysis: null,
+          created_at: at,
+          updated_at: at,
+          is_demo: false,
+        };
+        dispatch({
+          type: "project/create",
+          project,
+          message: {
+            id: newId(),
+            project_id: id,
+            author: "client",
+            kind: "original_request",
+            content: project.original_request,
+            created_at: at,
+            change_analysis: null,
+          },
+        });
+        emitAutomationEvent({ type: "project.created", projectId: id });
+        return id;
+      },
+
+      updateProject(id: string, patch: Partial<Project>) {
+        dispatch({ type: "project/update", id, patch, at: nowIso() });
+      },
+
+      deleteProject(id: string) {
+        dispatch({ type: "project/delete", id });
+      },
+
+      saveAnalysis(projectId: string, analysis: Omit<RequestAnalysis, "updated_at">) {
+        dispatch({
+          type: "project/update",
+          id: projectId,
+          patch: { analysis: { ...analysis, updated_at: nowIso() } },
+          at: nowIso(),
+        });
+        emitAutomationEvent({ type: "analysis.saved", projectId });
+      },
+
+      addMessage(input: {
+        project_id: string;
+        author: MessageAuthor;
+        kind: MessageKind;
+        content: string;
+        change_analysis?: ChangeAnalysis | null;
+      }) {
+        const id = newId();
+        dispatch({
+          type: "message/add",
+          message: { ...input, id, created_at: nowIso(), change_analysis: input.change_analysis ?? null },
+        });
+        if (input.kind === "change_request") {
+          emitAutomationEvent({ type: "change.recorded", projectId: input.project_id, messageId: id });
+        }
+        return id;
+      },
+
+      setChangeAnalysis(messageId: string, change_analysis: ChangeAnalysis | null) {
+        dispatch({ type: "message/update", id: messageId, patch: { change_analysis } });
+      },
+
+      /** New draft version, copied from the latest version or seeded from the project's service. */
+      createScopeVersion(projectId: string) {
+        const project = state.projects.find((p) => p.id === projectId);
+        const prev = latestVersion(state.scopeVersions, projectId);
+        const service = state.services.find((s) => s.id === project?.service_id);
+        const versionId = newId();
+        const at = nowIso();
+        const version: ScopeVersion = {
+          id: versionId,
+          project_id: projectId,
+          version_number: (prev?.version_number ?? 0) + 1,
+          status: "draft",
+          delivery_deadline: prev?.delivery_deadline ?? null,
+          revision_rounds: prev?.revision_rounds ?? service?.revision_limit ?? 2,
+          notes: "",
+          created_at: at,
+          sent_at: null,
+          approved_at: null,
+        };
+        let items: ScopeItem[];
+        if (prev) {
+          items = state.scopeItems
+            .filter((i) => i.scope_version_id === prev.id)
+            .map((i) => ({ ...i, id: newId(), scope_version_id: versionId }));
+        } else {
+          const seed: Array<[ScopeCategory, string[]]> = [
+            ["deliverable", service?.deliverables ?? []],
+            ["excluded", service?.exclusions ?? []],
+          ];
+          items = seed.flatMap(([category, list]) =>
+            list.map((content, position) => ({ id: newId(), scope_version_id: versionId, category, content, position })),
+          );
+        }
+        dispatch({ type: "scope/create", version, items });
+        return versionId;
+      },
+
+      updateScopeVersion(
+        id: string,
+        patch: Partial<Pick<ScopeVersion, "delivery_deadline" | "revision_rounds" | "notes">>,
+      ) {
+        dispatch({ type: "scope/update", id, patch });
+      },
+
+      sendScopeForApproval(id: string) {
+        const v = state.scopeVersions.find((x) => x.id === id);
+        dispatch({ type: "scope/send", id, at: nowIso() });
+        if (v) emitAutomationEvent({ type: "scope.sent_for_approval", projectId: v.project_id, versionId: id });
+      },
+
+      revertScopeToDraft(id: string) {
+        dispatch({ type: "scope/revertToDraft", id });
+      },
+
+      approveScope(id: string) {
+        const v = state.scopeVersions.find((x) => x.id === id);
+        dispatch({ type: "scope/approve", id, at: nowIso() });
+        if (v) emitAutomationEvent({ type: "scope.approved", projectId: v.project_id, versionId: id });
+      },
+
+      addScopeItem(versionId: string, category: ScopeCategory, content: string) {
+        const position =
+          Math.max(
+            -1,
+            ...state.scopeItems
+              .filter((i) => i.scope_version_id === versionId && i.category === category)
+              .map((i) => i.position),
+          ) + 1;
+        dispatch({
+          type: "scopeItem/add",
+          item: { id: newId(), scope_version_id: versionId, category, content, position },
+        });
+      },
+
+      updateScopeItem(id: string, content: string) {
+        dispatch({ type: "scopeItem/update", id, content });
+      },
+
+      removeScopeItem(id: string) {
+        dispatch({ type: "scopeItem/remove", id });
+      },
+    }),
+    [dispatch, state],
+  );
+}
+
+type Actions = ReturnType<typeof useCreateActions>;
+
+const DataContext = createContext<AppData | null>(null);
+const ActionsContext = createContext<Actions | null>(null);
+
+export function AppDataProvider({ children }: { children: ReactNode }) {
+  const [state, dispatch] = useReducer(reducer, initialData);
+  const actions = useCreateActions(dispatch, state);
+  return (
+    <DataContext.Provider value={state}>
+      <ActionsContext.Provider value={actions}>{children}</ActionsContext.Provider>
+    </DataContext.Provider>
+  );
+}
+
+export function useAppData(): AppData {
+  const ctx = useContext(DataContext);
+  if (!ctx) throw new Error("useAppData must be used inside AppDataProvider");
+  return ctx;
+}
+
+export function useActions(): Actions {
+  const ctx = useContext(ActionsContext);
+  if (!ctx) throw new Error("useActions must be used inside AppDataProvider");
+  return ctx;
+}
