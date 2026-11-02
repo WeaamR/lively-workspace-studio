@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { CheckCircle2, CopyPlus, FilePlus2, FileText, Lock, Send, Undo2 } from "lucide-react";
+import { CheckCircle2, CopyPlus, Save, FilePlus2, FileText, Lock, Send, Undo2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -223,16 +223,24 @@ function VersionActions({ version, itemCount }: { version: ScopeVersion; itemCou
 
   if (version.status === "draft") {
     return (
-      <Button
-        disabled={itemCount === 0}
-        onClick={() => {
-          actions.sendScopeForApproval(version.id);
-          toast.success("تم تحديد النطاق كمُرسل للعميل", { description: "سجّل موافقة العميل عند وصولها." });
-        }}
-      >
-        <Send />
-        إرسال للعميل للموافقة
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button variant="outline" onClick={() => toast.success(`حُفظت مسودة النسخة ${version.version_number}`)}>
+          <Save />
+          حفظ المسودة
+        </Button>
+        <Button
+          variant="outline"
+          disabled={itemCount === 0}
+          onClick={() => {
+            actions.sendScopeForApproval(version.id);
+            toast.success("تم تحديد النطاق كمُرسل للعميل", { description: "سجّل موافقة العميل عند وصولها." });
+          }}
+        >
+          <Send />
+          إرسال للعميل
+        </Button>
+        {itemCount > 0 && <ApproveButton version={version} />}
+      </div>
     );
   }
 
@@ -243,11 +251,22 @@ function VersionActions({ version, itemCount }: { version: ScopeVersion; itemCou
           <Undo2 />
           إعادة إلى المسودة
         </Button>
-        <AlertDialog>
+        <ApproveButton version={version} />
+      </div>
+    );
+  }
+
+  return null;
+}
+
+function ApproveButton({ version }: { version: ScopeVersion }) {
+  const actions = useActions();
+  return (
+    <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button>
               <CheckCircle2 />
-              تسجيل موافقة العميل
+              اعتماد النطاق
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
@@ -271,11 +290,7 @@ function VersionActions({ version, itemCount }: { version: ScopeVersion; itemCou
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-      </div>
-    );
-  }
-
-  return null;
+  );
 }
 
 function ApprovalTrack({ version }: { version: ScopeVersion }) {
