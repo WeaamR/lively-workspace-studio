@@ -1,5 +1,5 @@
 import { CLASSIFICATION_LABEL, SCOPE_CATEGORY_ORDER } from "./labels";
-import type { ChangeItem, ScopeCategory, ScopeItem, ScopeVersion } from "./types";
+import type { AppData, ChangeItem, ScopeCategory, ScopeItem, ScopeVersion } from "./types";
 
 /** Items of one category, ordered by position. */
 export function itemsByCategory(items: ScopeItem[], category: ScopeCategory): ScopeItem[] {
@@ -113,4 +113,40 @@ export function detectWeekdayDeadline(
   const suggestedDate = d.toISOString().slice(0, 10);
   const question = `هل تقصد يوم ${hit.ar} الموافق ${d.getUTCDate()} ${AR_MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}؟`;
   return { weekday: hit.ar, suggestedDate, question };
+}
+
+export const VERTICAL_MOTION_DELIVERABLE = "فيديو موشن جرافيك عمودي واحد بمقاس 1080×1920، بمدة تصل إلى 30 ثانية.";
+const WRONG_VERTICAL = /^(?=.*موشن)(?=.*عمودي)(?=.*(1920\s*[×x]\s*1080|1080\s*[×x]\s*1920)).*/;
+
+/**
+ * Repairs saved demo data so stored items (not just labels) stay correct:
+ * - vertical motion deliverables are rewritten to 1080×1920 / 30s,
+ * - editable versions whose client named only a weekday keep the deadline pending
+ *   (no agreed date) and always carry the clarification as an open item.
+ */
+export function repairScopeData(data: AppData): AppData {
+  const fixText = (t: string) => (WRONG_VERTICAL.test(t) ? VERTICAL_MOTION_DELIVERABLE : t);
+  const services = data.services.map((s) => ({ ...s, deliverables: s.deliverables.map(fixText) }));
+  let scopeItems = data.scopeItems.map((i) => (i.category === "deliverable" ? { ...i, content: fixText(i.content) } : i));
+  const scopeVersions = data.scopeVersions.map((v) => {
+    if (v.status !== "draft" || v.deadline_status === "confirmed") return v;
+    const project = data.projects.find((p) => p.id === v.project_id);
+    const pending = project ? detectWeekdayDeadline(project.original_request, project.created_at) : null;
+    if (!pending) return v;
+    const own = scopeItems.filter((i) => i.scope_version_id === v.id && i.category === "open_item");
+    if (!own.some((i) => i.content.includes(pending.question))) {
+      scopeItems = [
+        ...scopeItems,
+        {
+          id: `${v.id}-deadline-clarification`,
+          scope_version_id: v.id,
+          category: "open_item",
+          content: `موعد التسليم: ذكر العميل يوم ${pending.weekday} دون تأكيد التاريخ — ${pending.question}`,
+          position: own.length,
+        },
+      ];
+    }
+    return { ...v, delivery_deadline: null, deadline_status: "pending_clarification" as const, deadline_note: pending.question };
+  });
+  return { ...data, services, scopeItems, scopeVersions };
 }
