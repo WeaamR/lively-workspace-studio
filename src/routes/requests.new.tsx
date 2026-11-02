@@ -45,7 +45,7 @@ function NewRequestPage() {
   const [serviceId, setServiceId] = useState<string>(active[0]?.id ?? NO_SERVICE);
   const [message, setMessage] = useState("");
   const [files, setFiles] = useState<Attachment[]>([]);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<{ title?: string; client?: string; message?: string }>({});
   const [submitting, setSubmitting] = useState(false);
 
   const service = services.find((s) => s.id === serviceId) ?? null;
@@ -70,7 +70,7 @@ function NewRequestPage() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const errs: Record<string, string> = {};
+    const errs: { title?: string; client?: string; message?: string } = {};
     if (!title.trim()) errs.title = "عنوان المشروع مطلوب.";
     if (!client.trim()) errs.client = "اسم العميل مطلوب.";
     if (message.trim().length < 20) errs.message = "الصق رسالة العميل كاملة (20 حرفًا على الأقل).";

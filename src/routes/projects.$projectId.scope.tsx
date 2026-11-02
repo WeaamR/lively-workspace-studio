@@ -78,7 +78,7 @@ function ScopePage() {
     );
   }
 
-  const version = versions.find((v) => v.id === selectedId) ?? versions[0];
+  const version = (versions.find((v) => v.id === selectedId) ?? versions[0])!;
   const items = itemsFor(version.id);
   const editable = version.status === "draft";
   const hasDraft = versions.some((v) => v.status === "draft" || v.status === "pending_approval");

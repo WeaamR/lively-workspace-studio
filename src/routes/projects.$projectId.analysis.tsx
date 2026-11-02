@@ -218,7 +218,7 @@ function AnalysisPage() {
               </div>
               <Button variant="outline" size="sm" onClick={runAnalysis} disabled={running}>
                 {running ? <Loader2 className="animate-spin" /> : <Sparkles />}
-                إعادة التحليل الذكي
+                تشغيل التحليل الذكي
               </Button>
             </div>
 
@@ -311,12 +311,6 @@ function AnalysisPage() {
             </section>
           </>
         )}
-        <p className="text-center text-xs text-muted-foreground">
-          تحتاج تعديل بيانات الطلب؟{" "}
-          <Link to="/projects/$projectId" params={{ projectId }} className="text-primary hover:underline">
-            نظرة عامة على المشروع
-          </Link>
-        </p>
       </div>
     </div>
   );
@@ -337,7 +331,7 @@ function AnalysisSection({
   tone: string;
   count: number;
   children: ReactNode;
-  className?: string;
+  className?: string | undefined;
 }) {
   return (
     <section className={cn("surface-card p-4", className)}>
