@@ -12,8 +12,10 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ChangesRouteImport } from './routes/changes'
 import { Route as HistoryRouteImport } from './routes/history'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ProjectsIndexRouteImport } from './routes/projects.index'
 import { Route as ProjectsProjectIdRouteImport } from './routes/projects.$projectId'
+import { Route as RequestsNewRouteImport } from './routes/requests.new'
 import { Route as ProjectsProjectIdIndexRouteImport } from './routes/projects.$projectId.index'
 import { Route as ProjectsProjectIdAnalysisRouteImport } from './routes/projects.$projectId.analysis'
 import { Route as ProjectsProjectIdChangesRouteImport } from './routes/projects.$projectId.changes'
@@ -35,6 +37,11 @@ const HistoryRoute = HistoryRouteImport.update({
   path: '/history',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProjectsIndexRoute = ProjectsIndexRouteImport.update({
   id: '/projects/',
   path: '/projects/',
@@ -43,6 +50,11 @@ const ProjectsIndexRoute = ProjectsIndexRouteImport.update({
 const ProjectsProjectIdRoute = ProjectsProjectIdRouteImport.update({
   id: '/projects/$projectId',
   path: '/projects/$projectId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RequestsNewRoute = RequestsNewRouteImport.update({
+  id: '/requests/new',
+  path: '/requests/new',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProjectsProjectIdIndexRoute = ProjectsProjectIdIndexRouteImport.update({
@@ -78,7 +90,9 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/changes': typeof ChangesRoute
   '/history': typeof HistoryRoute
+  '/profile': typeof ProfileRoute
   '/projects/$projectId': typeof ProjectsProjectIdRouteWithChildren
+  '/requests/new': typeof RequestsNewRoute
   '/projects/': typeof ProjectsIndexRoute
   '/projects/$projectId/analysis': typeof ProjectsProjectIdAnalysisRoute
   '/projects/$projectId/changes': typeof ProjectsProjectIdChangesRoute
@@ -90,6 +104,8 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/changes': typeof ChangesRoute
   '/history': typeof HistoryRoute
+  '/profile': typeof ProfileRoute
+  '/requests/new': typeof RequestsNewRoute
   '/projects': typeof ProjectsIndexRoute
   '/projects/$projectId/analysis': typeof ProjectsProjectIdAnalysisRoute
   '/projects/$projectId/changes': typeof ProjectsProjectIdChangesRoute
@@ -102,7 +118,9 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/changes': typeof ChangesRoute
   '/history': typeof HistoryRoute
+  '/profile': typeof ProfileRoute
   '/projects/$projectId': typeof ProjectsProjectIdRouteWithChildren
+  '/requests/new': typeof RequestsNewRoute
   '/projects/': typeof ProjectsIndexRoute
   '/projects/$projectId/analysis': typeof ProjectsProjectIdAnalysisRoute
   '/projects/$projectId/changes': typeof ProjectsProjectIdChangesRoute
@@ -116,7 +134,9 @@ export interface FileRouteTypes {
     | '/'
     | '/changes'
     | '/history'
+    | '/profile'
     | '/projects/$projectId'
+    | '/requests/new'
     | '/projects/'
     | '/projects/$projectId/analysis'
     | '/projects/$projectId/changes'
@@ -128,6 +148,8 @@ export interface FileRouteTypes {
     | '/'
     | '/changes'
     | '/history'
+    | '/profile'
+    | '/requests/new'
     | '/projects'
     | '/projects/$projectId/analysis'
     | '/projects/$projectId/changes'
@@ -139,7 +161,9 @@ export interface FileRouteTypes {
     | '/'
     | '/changes'
     | '/history'
+    | '/profile'
     | '/projects/$projectId'
+    | '/requests/new'
     | '/projects/'
     | '/projects/$projectId/analysis'
     | '/projects/$projectId/changes'
@@ -152,7 +176,9 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ChangesRoute: typeof ChangesRoute
   HistoryRoute: typeof HistoryRoute
+  ProfileRoute: typeof ProfileRoute
   ProjectsProjectIdRoute: typeof ProjectsProjectIdRouteWithChildren
+  RequestsNewRoute: typeof RequestsNewRoute
   ProjectsIndexRoute: typeof ProjectsIndexRoute
 }
 
@@ -179,6 +205,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HistoryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/projects/': {
       id: '/projects/'
       path: '/projects'
@@ -191,6 +224,13 @@ declare module '@tanstack/react-router' {
       path: '/projects/$projectId'
       fullPath: '/projects/$projectId'
       preLoaderRoute: typeof ProjectsProjectIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/requests/new': {
+      id: '/requests/new'
+      path: '/requests/new'
+      fullPath: '/requests/new'
+      preLoaderRoute: typeof RequestsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/projects/$projectId/': {
@@ -254,7 +294,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ChangesRoute: ChangesRoute,
   HistoryRoute: HistoryRoute,
+  ProfileRoute: ProfileRoute,
   ProjectsProjectIdRoute: ProjectsProjectIdRouteWithChildren,
+  RequestsNewRoute: RequestsNewRoute,
   ProjectsIndexRoute: ProjectsIndexRoute,
 }
 export const routeTree = rootRouteImport
