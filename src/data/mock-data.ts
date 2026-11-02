@@ -83,6 +83,21 @@ const services: Service[] = [
     is_active: true,
     created_at: "2026-05-15T09:00:00Z",
   },
+  {
+    id: "svc-motion",
+    user_id: DEMO_USER_ID,
+    name: "فيديو موشن جرافيك إعلاني",
+    description: "فيديو إعلاني موشن جرافيك بمدة تصل إلى 30 ثانية.",
+    deliverables: ["فيديو واحد عمودي بمقاس 1080×1920 بمدة تصل إلى 30 ثانية"],
+    exclusions: ["التعليق الصوتي", "ملفات المشروع المصدرية"],
+    revision_limit: 2,
+    delivery_days: 10,
+    pricing_model: "fixed",
+    base_price: 600,
+    pricing_rules: "بيانات تجريبية قابلة للتعديل. السعر يشمل فيديو واحدًا؛ النسخ أو المقاسات الإضافية تُسعّر منفصلة.",
+    is_active: true,
+    created_at: "2026-06-01T09:00:00Z",
+  },
 ];
 
 const projects: Project[] = [

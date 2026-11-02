@@ -13,6 +13,7 @@ import type {
 } from "@/lib/types";
 
 export type Action =
+  | { type: "data/replace"; data: AppData }
   | { type: "profile/update"; patch: Partial<Profile> }
   | { type: "service/upsert"; service: Service }
   | { type: "service/delete"; id: string }
@@ -36,6 +37,9 @@ function isDraft(state: AppData, versionId: string): boolean {
 
 export function reducer(state: AppData, action: Action): AppData {
   switch (action.type) {
+    case "data/replace":
+      return action.data;
+
     case "profile/update":
       return { ...state, profile: { ...state.profile, ...action.patch } };
 
