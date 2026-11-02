@@ -27,7 +27,7 @@ import { useActions } from "@/data/store";
 import { formatDate } from "@/lib/format";
 import { SCOPE_CATEGORY_HINT, SCOPE_CATEGORY_LABEL, SCOPE_CATEGORY_ORDER } from "@/lib/labels";
 import { clauseRef, itemsByCategory } from "@/lib/scope";
-import type { ScopeVersion } from "@/lib/types";
+import type { ScopeCategory, ScopeVersion } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/projects/$projectId/scope")({
@@ -240,7 +240,7 @@ function ScopePage() {
   );
 }
 
-const EMPTY_TEXT: Record<string, string> = {
+const EMPTY_TEXT: Record<ScopeCategory, string> = {
   deliverable: "لم تُحدَّد مخرجات في ملف الخدمة بعد.",
   included: "لم تُحدَّد خدمات مشمولة صراحةً في ملف الخدمة — أضفها هنا أو في ملفك المهني.",
   excluded: "لم تُحدَّد استثناءات بعد.",

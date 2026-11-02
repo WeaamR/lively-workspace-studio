@@ -119,9 +119,9 @@ export interface ScopeVersion {
   delivery_deadline: string | null;
   revision_rounds: number;
   /** Whether the client confirmed the exact delivery date. Missing = confirmed if a date is set. */
-  deadline_status?: "confirmed" | "pending_clarification";
+  deadline_status?: "confirmed" | "pending_clarification" | undefined;
   /** Clarification question / note shown while the date is unconfirmed. */
-  deadline_note?: string;
+  deadline_note?: string | undefined;
   notes: string;
   created_at: string;
   sent_at: string | null;

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { reducer } from "@/data/reducer";
 import { initialData } from "@/data/mock-data";
 import { detectWeekdayDeadline } from "@/lib/scope";
+import type { ScopeVersion } from "@/lib/types";
 
 describe("scope rules", () => {
   it("treats 'Thursday' as unconfirmed and suggests Thursday 5 Nov 2026", () => {
@@ -19,8 +20,9 @@ describe("scope rules", () => {
     expect(s.inclusions?.length).toBeGreaterThan(0);
   });
   it("saving a draft creates a new draft version and never approves", () => {
-    const base = { ...initialData, scopeVersions: [{ id: "a", project_id: "p", version_number: 1, status: "draft" as const, delivery_deadline: null, revision_rounds: 2, notes: "", created_at: "", sent_at: null, approved_at: null }] };
-    const next = reducer(base, { type: "scope/saveAsNew", fromId: "a", version: { ...base.scopeVersions[0], id: "b", version_number: 2 }, items: [] });
+    const v0: ScopeVersion = { id: "a", project_id: "p", version_number: 1, status: "draft" as const, delivery_deadline: null, revision_rounds: 2, notes: "", created_at: "", sent_at: null, approved_at: null };
+    const base = { ...initialData, scopeVersions: [v0] };
+    const next = reducer(base, { type: "scope/saveAsNew", fromId: "a", version: { ...v0, id: "b", version_number: 2 }, items: [] });
     expect(next.scopeVersions.find((v) => v.id === "b")!.status).toBe("draft");
     expect(next.scopeVersions.some((v) => v.status === "approved" || v.status === "pending_approval")).toBe(false);
   });
