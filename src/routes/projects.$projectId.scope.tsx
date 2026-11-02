@@ -151,13 +151,13 @@ function ScopePage() {
               onChange={(e) =>
                 actions.updateScopeVersion(version.id, {
                   delivery_deadline: e.target.value || null,
-                  deadline_status: e.target.value ? "confirmed" : version.deadline_status,
+                  deadline_status: version.deadline_status === "pending_clarification" ? "pending_clarification" : e.target.value ? "confirmed" : version.deadline_status,
                 })
               }
             />
             {version.deadline_status === "pending_clarification" && (
               <div className="rounded-md border border-warning/40 bg-warning-soft p-2.5 text-xs leading-relaxed">
-                <div className="font-semibold">بانتظار التوضيح — التاريخ غير مؤكد</div>
+                <div className="font-semibold">موعد التسليم: بانتظار تأكيد العميل</div>
                 {version.deadline_note && <div className="mt-1">سؤال مقترح للعميل: {version.deadline_note}</div>}
                 {editable && (
                   <Button
@@ -229,7 +229,7 @@ function ScopePage() {
                   onUpdate={(id, c) => actions.updateScopeItem(id, c)}
                   onRemove={(id) => actions.removeScopeItem(id)}
                   placeholder="أضف بندًا…"
-                  emptyText={EMPTY_TEXT[category]}
+                  emptyText={category === "open_item" && version.deadline_status === "pending_clarification" ? "موعد التسليم بانتظار تأكيد العميل." : EMPTY_TEXT[category]}
                 />
               </section>
             );
