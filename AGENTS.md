@@ -17,3 +17,5 @@
 - Automation hooks (n8n-ready) are emitted from store actions via `src/services/automation.ts`; webhook URLs must stay server-side.
 - Message templates in `src/lib/scope.ts` are deterministic and built only from the user's own entries.
 - App is RTL: `dir="rtl"` on html plus Radix `DirectionProvider`; use logical utilities (ms/me/ps/pe/start/end) instead of left/right.
+- Phase 1 state persists to localStorage (key in `src/data/store.tsx`), loaded in an effect after mount to avoid hydration mismatch; header offers a reset to seed data.
+- While AI is not connected, `src/services/demo-engine.ts` (keyword rules) produces results saved with source "demo" and always labeled as non-AI.

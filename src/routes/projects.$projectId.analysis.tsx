@@ -29,6 +29,7 @@ import { composeClarificationMessage } from "@/lib/scope";
 import type { RequestAnalysis } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { analyzeClientRequest } from "@/services/ai";
+import { demoAnalyzeRequest, withDraftMessage } from "@/services/demo-engine";
 
 export const Route = createFileRoute("/projects/$projectId/analysis")({
   head: () => ({
@@ -137,7 +138,9 @@ function AnalysisPage() {
       saveAnalysis(project.id, { ...res.data, source: "ai" });
       toast.success("اكتمل التحليل");
     } else {
-      setServiceMessage(res.message);
+      saveAnalysis(project.id, withDraftMessage(demoAnalyzeRequest(project.original_request, service), project.client_name, profile.full_name));
+      setServiceMessage("التحليل الذكي غير متصل بعد، لذلك شُغّل تحليل تجريبي قائم على قواعد كلمات بسيطة.");
+      toast.info("تم إنشاء تحليل تجريبي");
     }
   };
 
@@ -199,7 +202,7 @@ function AnalysisPage() {
                 <div className="flex flex-wrap justify-center gap-2">
                   <Button onClick={runAnalysis} disabled={running}>
                     {running ? <Loader2 className="animate-spin" /> : <Sparkles />}
-                    تحليل الطلب
+                    تحليل تجريبي للطلب
                   </Button>
                   <Button variant="outline" onClick={() => saveAnalysis(project.id, EMPTY)}>
                     <ScanSearch />
@@ -218,13 +221,13 @@ function AnalysisPage() {
               </div>
               <Button variant="outline" size="sm" onClick={runAnalysis} disabled={running}>
                 {running ? <Loader2 className="animate-spin" /> : <Sparkles />}
-                تشغيل التحليل الذكي
+                إعادة التحليل التجريبي
               </Button>
             </div>
 
             {analysis.source === "demo" && (
-              <Notice tone="demo" title="تحليل تجريبي للعرض">
-                هذا المحتوى مُعدّ مسبقًا لتوضيح شكل النتائج، وليس ناتجًا عن تحليل ذكي. يمكنك تعديله بحرية.
+              <Notice tone="demo" title="تحليل تجريبي — ليس ذكاءً اصطناعيًا">
+                النتائج مستخرجة بقواعد كلمات مفتاحية بسيطة أو مُعدّة مسبقًا لتوضيح شكل التحليل. راجعها وعدّلها قبل الاعتماد عليها.
               </Notice>
             )}
             {serviceMessage && (
@@ -232,7 +235,6 @@ function AnalysisPage() {
                 {serviceMessage}
               </Notice>
             )}
-
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
               {SECTIONS.map((s) => (
                 <AnalysisSection
