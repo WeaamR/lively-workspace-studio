@@ -14,6 +14,7 @@ import { formatFileSize, formatMoney } from "@/lib/format";
 import { PRICING_MODEL_LABEL } from "@/lib/labels";
 import type { Attachment } from "@/lib/types";
 import { analyzeClientRequest } from "@/services/ai";
+import { demoAnalyzeRequest, withDraftMessage } from "@/services/demo-engine";
 
 export const Route = createFileRoute("/requests/new")({
   head: () => ({
@@ -91,7 +92,8 @@ function NewRequestPage() {
       saveAnalysis(projectId, { ...res.data, source: "ai" });
       toast.success("تم إنشاء المشروع وتحليل الطلب");
     } else {
-      toast.info("تم إنشاء المشروع", { description: "التحليل الذكي غير متصل بعد — يمكنك التحليل يدويًا." });
+      saveAnalysis(projectId, withDraftMessage(demoAnalyzeRequest(message, service), client.trim(), profile.full_name));
+      toast.info("تم إنشاء المشروع", { description: "التحليل الذكي غير متصل بعد — عُرض تحليل تجريبي قائم على قواعد بسيطة." });
     }
     navigate({ to: "/projects/$projectId/analysis", params: { projectId } });
   };

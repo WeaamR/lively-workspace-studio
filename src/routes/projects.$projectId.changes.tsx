@@ -20,6 +20,7 @@ import { clauseRef, composeChangeResponse } from "@/lib/scope";
 import type { ChangeAnalysis, ChangeClassification, ChangeItem, ProjectMessage, ScopeItem } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { compareAgainstScope } from "@/services/ai";
+import { demoCompare } from "@/services/demo-engine";
 
 export const Route = createFileRoute("/projects/$projectId/changes")({
   head: () => ({
@@ -40,7 +41,7 @@ const NO_CLAUSE = "none";
 
 function ChangesPage() {
   const { projectId } = Route.useParams();
-  const { project, approved, messages, itemsFor } = useProjectBundle(projectId);
+  const { project, approved, messages, itemsFor, profile } = useProjectBundle(projectId);
   const { addMessage } = useActions();
   const changeMessages = messages.filter((m) => m.kind === "change_request").reverse();
   const [selectedId, setSelectedId] = useState<string | null>(changeMessages[0]?.id ?? null);
@@ -86,11 +87,16 @@ function ChangesPage() {
             source: "ai",
             created_at: new Date().toISOString(),
           }
-        : { scope_version_id: approved.id, items: [], suggested_response: "", source: "manual", created_at: new Date().toISOString() };
+        : {
+            scope_version_id: approved.id,
+            ...demoCompare(text.trim(), approved, itemsFor(approved.id), project.client_name, profile.full_name),
+            source: "demo",
+            created_at: new Date().toISOString(),
+          };
     const id = addMessage({ project_id: projectId, author: "client", kind: "change_request", content: text.trim(), change_analysis: analysis });
     setSelectedId(id);
     setText("");
-    setServiceMessage(res.status === "ok" ? null : res.message);
+    setServiceMessage(res.status === "ok" ? null : "المقارنة الذكية غير متصلة بعد، لذلك شُغّلت مقارنة تجريبية بالكلمات المفتاحية.");
     toast.success("سُجّلت رسالة العميل في سجل المشروع");
   };
 
@@ -163,7 +169,7 @@ function ChangesPage() {
         <div className="space-y-4 lg:col-span-2">
           {serviceMessage && (
             <Notice tone="offline" title="المقارنة الذكية غير متاحة حاليًا">
-              {serviceMessage} صنّف كل طلب في الرسالة يدويًا أدناه واربطه بالبند المناسب.
+              {serviceMessage} راجع التصنيفات والبنود وعدّلها عند الحاجة.
             </Notice>
           )}
           {selected ? (
@@ -244,8 +250,8 @@ function ChangeDetail({
       <MessageCard message={message} />
 
       {ca.source === "demo" && (
-        <Notice tone="demo" title="مقارنة تجريبية للعرض">
-          هذه التصنيفات مُعدّة مسبقًا لتوضيح شكل النتائج، وليست ناتجة عن تحليل ذكي.
+        <Notice tone="demo" title="مقارنة تجريبية — ليست ذكاءً اصطناعيًا">
+          التصنيفات ناتجة عن مطابقة كلمات بسيطة أو مُعدّة مسبقًا للعرض. راجعها قبل إرسال أي رد.
         </Notice>
       )}
       {version && version.id !== approvedVersionId && (
