@@ -218,7 +218,7 @@ function AnalysisPage() {
               </div>
               <Button variant="outline" size="sm" onClick={runAnalysis} disabled={running}>
                 {running ? <Loader2 className="animate-spin" /> : <Sparkles />}
-                إعادة التحليل الذكي
+                تشغيل التحليل الذكي
               </Button>
             </div>
 
