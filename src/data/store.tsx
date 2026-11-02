@@ -4,7 +4,7 @@
  * Components only use `useAppData()` / `useActions()`. In phase 2 the
  * internals are swapped for Supabase + TanStack Query; the hook surface stays.
  */
-import { createContext, useContext, useMemo, useReducer, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useReducer, useRef, type ReactNode } from "react";
 
 import { newId, nowIso } from "@/lib/format";
 import { latestVersion } from "@/lib/scope";
@@ -27,6 +27,9 @@ import { emitAutomationEvent } from "@/services/automation";
 import { DEMO_USER_ID, initialData } from "./mock-data";
 import { reducer } from "./reducer";
 
+/** Phase 1 persistence; replaced by Lovable Cloud in phase 2. */
+export const STORAGE_KEY = "scope-demo-data-v1";
+
 export interface NewProjectInput {
   title: string;
   client_name: string;
@@ -38,6 +41,10 @@ export interface NewProjectInput {
 function useCreateActions(dispatch: React.Dispatch<Parameters<typeof reducer>[1]>, state: AppData) {
   return useMemo(
     () => ({
+      resetDemoData() {
+        dispatch({ type: "data/replace", data: structuredClone(initialData) });
+      },
+
       updateProfile(patch: Partial<Profile>) {
         dispatch({ type: "profile/update", patch });
       },
@@ -225,6 +232,31 @@ const ActionsContext = createContext<Actions | null>(null);
 
 export function AppDataProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialData);
+  const hydrated = useRef(false);
+
+  // Load persisted demo data after mount (keeps SSR and first client render identical).
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as AppData;
+        if (parsed && Array.isArray(parsed.projects) && parsed.profile) dispatch({ type: "data/replace", data: parsed });
+      }
+    } catch {
+      /* corrupt storage: keep seed data */
+    }
+    hydrated.current = true;
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated.current) return;
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch {
+      /* storage full or unavailable */
+    }
+  }, [state]);
+
   const actions = useCreateActions(dispatch, state);
   return (
     <DataContext.Provider value={state}>
