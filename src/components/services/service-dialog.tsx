@@ -25,6 +25,7 @@ const EMPTY: ServiceDraft = {
   description: "",
   deliverables: [],
   exclusions: [],
+  inclusions: [],
   revision_limit: 2,
   delivery_days: 14,
   pricing_model: "fixed",
@@ -92,6 +93,15 @@ export function ServiceDialog({
                 onChange={(v) => set("deliverables", v)}
                 placeholder="مثال: شعار رئيسي"
                 bulletClassName="bg-success"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>الخدمات المشمولة</Label>
+              <ListEditorStrings
+                value={draft.inclusions ?? []}
+                onChange={(v) => set("inclusions", v)}
+                placeholder="مثال: التصميم والتحريك"
+                bulletClassName="bg-primary"
               />
             </div>
             <div className="space-y-2">

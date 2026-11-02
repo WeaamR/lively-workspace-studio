@@ -23,7 +23,8 @@ export type Action =
   | { type: "message/add"; message: ProjectMessage }
   | { type: "message/update"; id: string; patch: Partial<ProjectMessage> }
   | { type: "scope/create"; version: ScopeVersion; items: ScopeItem[] }
-  | { type: "scope/update"; id: string; patch: Partial<Pick<ScopeVersion, "delivery_deadline" | "revision_rounds" | "notes">> }
+  | { type: "scope/update"; id: string; patch: Partial<Pick<ScopeVersion, "delivery_deadline" | "revision_rounds" | "notes" | "deadline_status" | "deadline_note">> }
+  | { type: "scope/saveAsNew"; fromId: string; version: ScopeVersion; items: ScopeItem[] }
   | { type: "scope/send"; id: string; at: string }
   | { type: "scope/revertToDraft"; id: string }
   | { type: "scope/approve"; id: string; at: string }
@@ -107,6 +108,17 @@ export function reducer(state: AppData, action: Action): AppData {
       return {
         ...state,
         scopeVersions: state.scopeVersions.map((v) => (v.id === action.id ? { ...v, ...action.patch } : v)),
+      };
+
+    case "scope/saveAsNew":
+      if (!isDraft(state, action.fromId)) return state;
+      return {
+        ...state,
+        scopeVersions: [
+          ...state.scopeVersions.map((v) => (v.id === action.fromId ? { ...v, status: "superseded" as const } : v)),
+          action.version,
+        ],
+        scopeItems: [...state.scopeItems, ...action.items],
       };
 
     case "scope/send":

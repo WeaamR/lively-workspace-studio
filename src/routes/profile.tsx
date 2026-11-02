@@ -223,6 +223,7 @@ function ServicesSection() {
 
               <div className="mt-4 grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2">
                 <BulletList title="المخرجات" items={s.deliverables} dot="bg-success" />
+                {(s.inclusions?.length ?? 0) > 0 && <BulletList title="الخدمات المشمولة" items={s.inclusions ?? []} dot="bg-primary" />}
                 <BulletList title="الاستثناءات" items={s.exclusions} dot="bg-destructive" />
               </div>
               {s.pricing_rules && (

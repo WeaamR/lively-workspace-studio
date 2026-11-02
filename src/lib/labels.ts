@@ -45,6 +45,7 @@ export const SCOPE_CATEGORY_ORDER: ScopeCategory[] = [
   "excluded",
   "client_responsibility",
   "condition",
+  "open_item",
 ];
 
 export const SCOPE_CATEGORY_LABEL: Record<ScopeCategory, string> = {
@@ -53,6 +54,7 @@ export const SCOPE_CATEGORY_LABEL: Record<ScopeCategory, string> = {
   excluded: "الخدمات المستثناة",
   client_responsibility: "مسؤوليات العميل",
   condition: "شروط المشروع",
+  open_item: "نقاط بانتظار التوضيح",
 };
 
 export const SCOPE_CATEGORY_HINT: Record<ScopeCategory, string> = {
@@ -61,4 +63,5 @@ export const SCOPE_CATEGORY_HINT: Record<ScopeCategory, string> = {
   excluded: "ما لا يشمله المشروع ويُسعَّر بشكل منفصل.",
   client_responsibility: "ما يجب على العميل تقديمه أو الالتزام به.",
   condition: "شروط الدفع والتسليم والملكية وغيرها.",
+  open_item: "معلومات غير مؤكدة بعد — ليست جزءًا من الاتفاق حتى يؤكدها العميل.",
 };
