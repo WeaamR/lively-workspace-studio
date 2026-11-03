@@ -18,7 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { useActions } from "@/data/store";
+import { useActions, useAppData } from "@/data/store";
 
 export function AppHeader() {
   const { signOut } = useActions();
