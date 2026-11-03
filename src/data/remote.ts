@@ -464,6 +464,14 @@ export async function persistAction(action: Action, prev: AppData, next: AppData
       return;
     }
 
+    case "scope/delete": {
+      if (next.scopeVersions.some((v) => v.id === action.id)) return; // rejected by reducer (not a draft)
+      // Remove items explicitly (works with or without ON DELETE CASCADE), then the draft row.
+      check(await supabase.from("scope_items").delete().eq("scope_version_id", action.id));
+      check(await supabase.from("scope_versions").delete().eq("id", action.id).eq("status", "draft"));
+      return;
+    }
+
     case "scopeItem/add": {
       const rows = itemRows([action.item], userId);
       if (rows.length && next.scopeItems.length > prev.scopeItems.length) check(await supabase.from("scope_items").insert(rows));
