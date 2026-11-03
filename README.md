@@ -26,8 +26,7 @@ Focus on delivering a complete, polished, responsive SaaS application.
 
 This project was built with [Lovable](https://lovable.dev).
 
-**Live app**: https://lively-workspace-studio.lovable.app
-
+**Live app**: https://freelance-assistant-scope.lovable.app
 ## Build with Lovable
 
 Continue developing this project in the [Lovable editor](https://lovable.dev/projects/ace0b09c-359b-4893-86c7-6bae63b7713a).
