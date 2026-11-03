@@ -89,7 +89,7 @@ export function versionToDb(v: ScopeVersion, userId: string) {
 export function overallClassification(items: { classification: ChangeClassification }[]): string {
   const set = new Set(items.map((i) => i.classification));
   if (set.size === 0) return "needs_clarification";
-  if (set.size === 1) return [...set][0];
+  if (set.size === 1) return [...set][0] as string;
   return "mixed";
 }
 
@@ -133,7 +133,7 @@ export async function loadAppData(user: User): Promise<AppData> {
     const ins = check(
       await supabase
         .from("profiles")
-        .upsert({ id: user.id, email: user.email ?? null, full_name: (user.user_metadata?.full_name as string) ?? null })
+        .upsert({ id: user.id, email: user.email ?? null, full_name: (user.user_metadata?.["full_name"] as string) ?? null })
         .select("*")
         .single(),
     );
@@ -206,14 +206,14 @@ export async function loadAppData(user: User): Promise<AppData> {
     reviews.set(r.message_id, {
       scope_version_id: r.scope_version_id,
       items: findings.map((f) => ({
-        id: String(f.id ?? crypto.randomUUID()),
-        request_text: String(f.request_text ?? ""),
-        classification: (f.classification as ChangeClassification) ?? "needs_clarification",
-        scope_item_id: (f.scope_item_id as string) ?? null,
-        note: String(f.note ?? ""),
+        id: String(f["id"] ?? crypto.randomUUID()),
+        request_text: String(f["request_text"] ?? ""),
+        classification: (f["classification"] as ChangeClassification) ?? "needs_clarification",
+        scope_item_id: (f["scope_item_id"] as string) ?? null,
+        note: String(f["note"] ?? ""),
       })),
       suggested_response: r.suggested_response ?? "",
-      source: (findings[0]?.source as ResultSource) ?? "demo",
+      source: (findings[0]?.["source"] as ResultSource) ?? "demo",
       created_at: r.created_at ?? "",
     });
   }
