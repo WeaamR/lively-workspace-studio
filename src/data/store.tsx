@@ -4,7 +4,7 @@
  * Components only use `useAppData()` / `useActions()`. In phase 2 the
  * internals are swapped for Supabase + TanStack Query; the hook surface stays.
  */
-import { createContext, useContext, useEffect, useMemo, useReducer, useRef, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from "react";
 
 import { newId, nowIso } from "@/lib/format";
 import { detectWeekdayDeadline, latestVersion, repairScopeData } from "@/lib/scope";
@@ -24,11 +24,14 @@ import type {
 } from "@/lib/types";
 import { emitAutomationEvent } from "@/services/automation";
 
-import { DEMO_USER_ID, initialData } from "./mock-data";
-import { reducer } from "./reducer";
+import { toast } from "sonner";
 
-/** Phase 1 persistence; replaced by Lovable Cloud in phase 2. */
-export const STORAGE_KEY = "scope-demo-data-v1";
+import { supabase } from "@/integrations/supabase/client";
+
+import { emptyData } from "./empty";
+import { loadAppData, persistAction } from "./remote";
+import { reducer, type Action } from "./reducer";
+
 
 export interface NewProjectInput {
   title: string;
@@ -38,11 +41,11 @@ export interface NewProjectInput {
   attachments: Attachment[];
 }
 
-function useCreateActions(dispatch: React.Dispatch<Parameters<typeof reducer>[1]>, state: AppData) {
+function useCreateActions(dispatch: (a: Action) => void, getState: () => AppData) {
   return useMemo(
     () => ({
-      resetDemoData() {
-        dispatch({ type: "data/replace", data: structuredClone(initialData) });
+      async signOut() {
+        await supabase.auth.signOut();
       },
 
       updateProfile(patch: Partial<Profile>) {
@@ -50,11 +53,11 @@ function useCreateActions(dispatch: React.Dispatch<Parameters<typeof reducer>[1]
       },
 
       saveService(service: Omit<Service, "id" | "user_id" | "created_at"> & { id?: string }) {
-        const existing = service.id ? state.services.find((s) => s.id === service.id) : undefined;
+        const existing = service.id ? getState().services.find((s) => s.id === service.id) : undefined;
         const full: Service = {
           ...service,
           id: existing?.id ?? newId(),
-          user_id: DEMO_USER_ID,
+          user_id: getState().profile.id,
           created_at: existing?.created_at ?? nowIso(),
         };
         dispatch({ type: "service/upsert", service: full });
@@ -70,7 +73,7 @@ function useCreateActions(dispatch: React.Dispatch<Parameters<typeof reducer>[1]
         const id = newId();
         const project: Project = {
           id,
-          user_id: DEMO_USER_ID,
+          user_id: getState().profile.id,
           service_id: input.service_id,
           title: input.title.trim(),
           client_name: input.client_name.trim(),
@@ -141,9 +144,9 @@ function useCreateActions(dispatch: React.Dispatch<Parameters<typeof reducer>[1]
 
       /** New draft version, copied from the latest version or seeded from the project's service. */
       createScopeVersion(projectId: string) {
-        const project = state.projects.find((p) => p.id === projectId);
-        const prev = latestVersion(state.scopeVersions, projectId);
-        const service = state.services.find((s) => s.id === project?.service_id);
+        const project = getState().projects.find((p) => p.id === projectId);
+        const prev = latestVersion(getState().scopeVersions, projectId);
+        const service = getState().services.find((s) => s.id === project?.service_id);
         const versionId = newId();
         const at = nowIso();
         const version: ScopeVersion = {
@@ -162,7 +165,7 @@ function useCreateActions(dispatch: React.Dispatch<Parameters<typeof reducer>[1]
         };
         let items: ScopeItem[];
         if (prev) {
-          items = state.scopeItems
+          items = getState().scopeItems
             .filter((i) => i.scope_version_id === prev.id)
             .map((i) => ({ ...i, id: newId(), scope_version_id: versionId }));
         } else {
@@ -199,7 +202,7 @@ function useCreateActions(dispatch: React.Dispatch<Parameters<typeof reducer>[1]
       },
 
       sendScopeForApproval(id: string) {
-        const v = state.scopeVersions.find((x) => x.id === id);
+        const v = getState().scopeVersions.find((x) => x.id === id);
         dispatch({ type: "scope/send", id, at: nowIso() });
         if (v) emitAutomationEvent({ type: "scope.sent_for_approval", projectId: v.project_id, versionId: id });
       },
@@ -210,9 +213,9 @@ function useCreateActions(dispatch: React.Dispatch<Parameters<typeof reducer>[1]
 
       /** Saves the current draft as a new draft version; the previous draft is kept as history. Never sends or approves. */
       saveScopeDraft(id: string) {
-        const from = state.scopeVersions.find((x) => x.id === id);
+        const from = getState().scopeVersions.find((x) => x.id === id);
         if (!from || from.status !== "draft") return null;
-        const prev = latestVersion(state.scopeVersions, from.project_id);
+        const prev = latestVersion(getState().scopeVersions, from.project_id);
         const versionId = newId();
         const version: ScopeVersion = {
           ...from,
@@ -223,7 +226,7 @@ function useCreateActions(dispatch: React.Dispatch<Parameters<typeof reducer>[1]
           sent_at: null,
           approved_at: null,
         };
-        const items = state.scopeItems
+        const items = getState().scopeItems
           .filter((i) => i.scope_version_id === id)
           .map((i) => ({ ...i, id: newId(), scope_version_id: versionId }));
         dispatch({ type: "scope/saveAsNew", fromId: id, version, items });
@@ -231,7 +234,7 @@ function useCreateActions(dispatch: React.Dispatch<Parameters<typeof reducer>[1]
       },
 
       approveScope(id: string) {
-        const v = state.scopeVersions.find((x) => x.id === id);
+        const v = getState().scopeVersions.find((x) => x.id === id);
         dispatch({ type: "scope/approve", id, at: nowIso() });
         if (v) emitAutomationEvent({ type: "scope.approved", projectId: v.project_id, versionId: id });
       },
@@ -240,7 +243,7 @@ function useCreateActions(dispatch: React.Dispatch<Parameters<typeof reducer>[1]
         const position =
           Math.max(
             -1,
-            ...state.scopeItems
+            ...getState().scopeItems
               .filter((i) => i.scope_version_id === versionId && i.category === category)
               .map((i) => i.position),
           ) + 1;
@@ -258,48 +261,96 @@ function useCreateActions(dispatch: React.Dispatch<Parameters<typeof reducer>[1]
         dispatch({ type: "scopeItem/remove", id });
       },
     }),
-    [dispatch, state],
+    [dispatch, getState],
   );
 }
 
 type Actions = ReturnType<typeof useCreateActions>;
 
+export type DataStatus = "loading" | "ready" | "signed_out" | "error";
+
 const DataContext = createContext<AppData | null>(null);
 const ActionsContext = createContext<Actions | null>(null);
+const StatusContext = createContext<{ status: DataStatus; error: string | null; reload: () => void }>({
+  status: "loading",
+  error: null,
+  reload: () => {},
+});
 
 export function AppDataProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, initialData, repairScopeData);
-  const hydrated = useRef(false);
+  const [state, rawDispatch] = useReducer(reducer, emptyData);
+  const stateRef = useRef<AppData>(emptyData);
+  const userIdRef = useRef<string | null>(null);
+  const queue = useRef<Promise<void>>(Promise.resolve());
+  const [status, setStatus] = useState<DataStatus>("loading");
+  const [error, setError] = useState<string | null>(null);
 
-  // Load persisted demo data after mount (keeps SSR and first client render identical).
-  useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as AppData;
-        if (parsed && Array.isArray(parsed.projects) && parsed.profile) dispatch({ type: "data/replace", data: parsed });
-      }
-    } catch {
-      /* corrupt storage: keep seed data */
+  const load = useCallback(async () => {
+    setStatus("loading");
+    const { data } = await supabase.auth.getUser();
+    const user = data.user;
+    userIdRef.current = user?.id ?? null;
+    if (!user) {
+      stateRef.current = emptyData;
+      rawDispatch({ type: "data/replace", data: emptyData });
+      setStatus("signed_out");
+      return;
     }
-    hydrated.current = true;
+    try {
+      const loaded = await loadAppData(user);
+      stateRef.current = reducer(stateRef.current, { type: "data/replace", data: loaded });
+      rawDispatch({ type: "data/replace", data: loaded });
+      setError(null);
+      setStatus("ready");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      setStatus("error");
+    }
   }, []);
 
   useEffect(() => {
-    if (!hydrated.current) return;
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch {
-      /* storage full or unavailable */
-    }
-  }, [state]);
+    void load();
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT" || (event === "SIGNED_IN" && session?.user.id !== userIdRef.current)) void load();
+    });
+    return () => sub.subscription.unsubscribe();
+  }, [load]);
 
-  const actions = useCreateActions(dispatch, state);
-  return (
-    <DataContext.Provider value={state}>
-      <ActionsContext.Provider value={actions}>{children}</ActionsContext.Provider>
-    </DataContext.Provider>
+  /** Applies the action locally, then writes it to the database in order. */
+  const dispatch = useCallback(
+    (action: Action) => {
+      const prev = stateRef.current;
+      const next = reducer(prev, action);
+      stateRef.current = next;
+      rawDispatch(action);
+      const userId = userIdRef.current;
+      if (!userId) return;
+      queue.current = queue.current
+        .then(() => persistAction(action, prev, next, userId))
+        .catch((e: unknown) => {
+          toast.error("تعذّر حفظ التغيير في قاعدة البيانات", {
+            description: e instanceof Error ? e.message : String(e),
+          });
+          void load();
+        });
+    },
+    [load],
   );
+
+  const getState = useCallback(() => stateRef.current, []);
+  const actions = useCreateActions(dispatch, getState);
+  const statusValue = useMemo(() => ({ status, error, reload: () => void load() }), [status, error, load]);
+  return (
+    <StatusContext.Provider value={statusValue}>
+      <DataContext.Provider value={state}>
+        <ActionsContext.Provider value={actions}>{children}</ActionsContext.Provider>
+      </DataContext.Provider>
+    </StatusContext.Provider>
+  );
+}
+
+export function useDataStatus() {
+  return useContext(StatusContext);
 }
 
 export function useAppData(): AppData {
