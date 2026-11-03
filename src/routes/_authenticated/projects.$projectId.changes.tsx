@@ -6,6 +6,17 @@ import { toast } from "sonner";
 import { EmptyState } from "@/components/common/empty-state";
 import { Notice } from "@/components/common/notice";
 import { CLASSIFICATION_VARIANT, ClassificationBadge, SourceBadge } from "@/components/common/status-badges";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,12 +53,25 @@ const NO_CLAUSE = "none";
 function ChangesPage() {
   const { projectId } = Route.useParams();
   const { project, approved, messages, itemsFor, profile } = useProjectBundle(projectId);
-  const { addMessage } = useActions();
+  const { addMessage, deleteChangeReview } = useActions();
   const changeMessages = messages.filter((m) => m.kind === "change_request").reverse();
   const [selectedId, setSelectedId] = useState<string | null>(changeMessages[0]?.id ?? null);
   const [text, setText] = useState("");
   const [running, setRunning] = useState(false);
   const [serviceMessage, setServiceMessage] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const confirmDeleteReview = (id: string) => {
+    if (deletingId) return; // prevent duplicate delete requests
+    setDeletingId(id);
+    const ok = deleteChangeReview(id);
+    setDeletingId(null);
+    if (ok) {
+      toast.success("حُذف طلب التغيير", { description: "بقيت رسالة العميل الأصلية محفوظة في سجل المشروع." });
+    } else {
+      toast.error("تعذّر حذف طلب التغيير");
+    }
+  };
 
   if (!project) return null;
 
@@ -140,12 +164,12 @@ function ChangesPage() {
             ) : (
               <ul className="space-y-1.5">
                 {changeMessages.map((m) => (
-                  <li key={m.id}>
+                  <li key={m.id} className="flex items-center gap-1">
                     <button
                       type="button"
                       onClick={() => setSelectedId(m.id)}
                       className={cn(
-                        "w-full rounded-lg border px-3 py-2.5 text-start transition-colors",
+                        "min-w-0 flex-1 rounded-lg border px-3 py-2.5 text-start transition-colors",
                         m.id === selected?.id ? "border-primary/40 bg-primary-soft" : "border-transparent hover:bg-muted",
                       )}
                     >
@@ -159,6 +183,34 @@ function ChangesPage() {
                         )}
                       </div>
                     </button>
+                    {m.change_analysis && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8 shrink-0 text-muted-foreground hover:text-destructive"
+                            title="حذف طلب التغيير"
+                            aria-label="حذف طلب التغيير"
+                            disabled={deletingId === m.id}
+                          >
+                            {deletingId === m.id ? <Loader2 className="animate-spin" /> : <Trash2 />}
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>حذف طلب التغيير</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              هل أنت متأكد من حذف طلب التغيير؟ لا يمكن التراجع عن هذا الإجراء.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter className="gap-2">
+                            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => confirmDeleteReview(m.id)}>حذف</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
                   </li>
                 ))}
               </ul>

@@ -29,6 +29,7 @@ export type Action =
   | { type: "scope/send"; id: string; at: string }
   | { type: "scope/revertToDraft"; id: string }
   | { type: "scope/approve"; id: string; at: string }
+  | { type: "scope/delete"; id: string }
   | { type: "scopeItem/add"; item: ScopeItem }
   | { type: "scopeItem/update"; id: string; content: string }
   | { type: "scopeItem/remove"; id: string };
@@ -157,6 +158,17 @@ export function reducer(state: AppData, action: Action): AppData {
               }
             : p,
         ),
+      };
+    }
+
+    case "scope/delete": {
+      // Only drafts can be deleted; approved/superseded/sent versions are immutable history.
+      const target = state.scopeVersions.find((v) => v.id === action.id);
+      if (!target || target.status !== "draft") return state;
+      return {
+        ...state,
+        scopeVersions: state.scopeVersions.filter((v) => v.id !== action.id),
+        scopeItems: state.scopeItems.filter((i) => i.scope_version_id !== action.id),
       };
     }
 

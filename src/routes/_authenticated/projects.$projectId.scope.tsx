@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { CheckCircle2, CopyPlus, Save, FilePlus2, FileText, Lock, Send, Undo2 } from "lucide-react";
+import { CheckCircle2, CopyPlus, Loader2, Save, FilePlus2, FileText, Lock, Send, Trash2, Undo2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -90,12 +90,12 @@ function ScopePage() {
           <h2 className="mb-3 text-sm font-semibold">نسخ النطاق</h2>
           <ul className="space-y-1.5">
             {versions.map((v) => (
-              <li key={v.id}>
+              <li key={v.id} className="flex items-center gap-1">
                 <button
                   type="button"
                   onClick={() => setSelectedId(v.id)}
                   className={cn(
-                    "w-full rounded-lg border px-3 py-2.5 text-start transition-colors",
+                    "min-w-0 flex-1 rounded-lg border px-3 py-2.5 text-start transition-colors",
                     v.id === version.id ? "border-primary/40 bg-primary-soft" : "border-transparent hover:bg-muted",
                   )}
                 >
@@ -107,6 +107,7 @@ function ScopePage() {
                     {v.approved_at ? `اعتُمدت ${formatDate(v.approved_at)}` : `أُنشئت ${formatDate(v.created_at)}`}
                   </div>
                 </button>
+                {v.status === "draft" && <DeleteDraftButton version={v} />}
               </li>
             ))}
           </ul>
@@ -294,6 +295,56 @@ function VersionActions({ version, itemCount }: { version: ScopeVersion; itemCou
   }
 
   return null;
+}
+
+function DeleteDraftButton({ version }: { version: ScopeVersion }) {
+  const actions = useActions();
+  const [deleting, setDeleting] = useState(false);
+
+  const confirmDelete = () => {
+    if (deleting) return; // prevent duplicate delete requests
+    setDeleting(true);
+    const res = actions.deleteScopeDraft(version.id);
+    setDeleting(false);
+    if (res.ok) {
+      toast.success(`حُذفت مسودة النسخة ${version.version_number}`, { description: "حُذفت بنود النطاق المرتبطة بها أيضًا." });
+    } else if (res.reason === "referenced") {
+      toast.error("لا يمكن حذف هذه المسودة", {
+        description: "يوجد طلب تغيير مسجّل قورن بهذه النسخة. احذف طلب التغيير أولًا من صفحة كشف التغييرات.",
+      });
+    } else {
+      toast.error("لا يمكن حذف هذه النسخة", { description: "يمكن حذف المسودات فقط." });
+    }
+  };
+
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-8 shrink-0 text-muted-foreground hover:text-destructive"
+          title="حذف المسودة"
+          aria-label="حذف المسودة"
+          disabled={deleting}
+        >
+          {deleting ? <Loader2 className="animate-spin" /> : <Trash2 />}
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>حذف مسودة النطاق</AlertDialogTitle>
+          <AlertDialogDescription>
+            هل أنت متأكد من حذف هذه المسودة؟ سيتم حذف بنود النطاق المرتبطة بها أيضًا.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter className="gap-2">
+          <AlertDialogCancel>إلغاء</AlertDialogCancel>
+          <AlertDialogAction onClick={confirmDelete}>حذف</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
 }
 
 function ApproveButton({ version }: { version: ScopeVersion }) {
