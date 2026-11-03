@@ -164,12 +164,12 @@ function ChangesPage() {
             ) : (
               <ul className="space-y-1.5">
                 {changeMessages.map((m) => (
-                  <li key={m.id}>
+                  <li key={m.id} className="flex items-center gap-1">
                     <button
                       type="button"
                       onClick={() => setSelectedId(m.id)}
                       className={cn(
-                        "w-full rounded-lg border px-3 py-2.5 text-start transition-colors",
+                        "min-w-0 flex-1 rounded-lg border px-3 py-2.5 text-start transition-colors",
                         m.id === selected?.id ? "border-primary/40 bg-primary-soft" : "border-transparent hover:bg-muted",
                       )}
                     >
@@ -183,6 +183,34 @@ function ChangesPage() {
                         )}
                       </div>
                     </button>
+                    {m.change_analysis && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8 shrink-0 text-muted-foreground hover:text-destructive"
+                            title="حذف طلب التغيير"
+                            aria-label="حذف طلب التغيير"
+                            disabled={deletingId === m.id}
+                          >
+                            {deletingId === m.id ? <Loader2 className="animate-spin" /> : <Trash2 />}
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>حذف طلب التغيير</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              هل أنت متأكد من حذف طلب التغيير؟ لا يمكن التراجع عن هذا الإجراء.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter className="gap-2">
+                            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => confirmDeleteReview(m.id)}>حذف</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
                   </li>
                 ))}
               </ul>
