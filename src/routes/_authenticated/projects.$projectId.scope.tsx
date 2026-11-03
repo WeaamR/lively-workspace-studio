@@ -30,7 +30,7 @@ import { clauseRef, itemsByCategory } from "@/lib/scope";
 import type { ScopeCategory, ScopeVersion } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/projects/$projectId/scope")({
+export const Route = createFileRoute("/_authenticated/projects/$projectId/scope")({
   head: () => ({
     meta: [
       { title: "نطاق العمل — SCOPE" },

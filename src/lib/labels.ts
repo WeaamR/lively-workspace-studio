@@ -44,7 +44,6 @@ export const SCOPE_CATEGORY_ORDER: ScopeCategory[] = [
   "included",
   "excluded",
   "client_responsibility",
-  "condition",
   "open_item",
 ];
 

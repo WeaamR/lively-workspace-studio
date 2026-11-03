@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 import { compareAgainstScope } from "@/services/ai";
 import { demoCompare } from "@/services/demo-engine";
 
-export const Route = createFileRoute("/projects/$projectId/changes")({
+export const Route = createFileRoute("/_authenticated/projects/$projectId/changes")({
   head: () => ({
     meta: [
       { title: "كشف التغييرات — SCOPE" },

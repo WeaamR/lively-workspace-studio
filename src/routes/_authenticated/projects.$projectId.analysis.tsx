@@ -31,7 +31,7 @@ import { cn } from "@/lib/utils";
 import { analyzeClientRequest } from "@/services/ai";
 import { demoAnalyzeRequest, withDraftMessage } from "@/services/demo-engine";
 
-export const Route = createFileRoute("/projects/$projectId/analysis")({
+export const Route = createFileRoute("/_authenticated/projects/$projectId/analysis")({
   head: () => ({
     meta: [
       { title: "تحليل الطلب — SCOPE" },

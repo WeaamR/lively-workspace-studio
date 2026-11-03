@@ -11,7 +11,7 @@ import { formatDate, formatDateTime } from "@/lib/format";
 import { CLASSIFICATION_LABEL } from "@/lib/labels";
 import type { ChangeClassification } from "@/lib/types";
 
-export const Route = createFileRoute("/projects/$projectId/history")({
+export const Route = createFileRoute("/_authenticated/projects/$projectId/history")({
   head: () => ({
     meta: [
       { title: "سجل المشروع — SCOPE" },

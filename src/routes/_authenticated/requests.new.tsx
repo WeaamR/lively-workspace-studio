@@ -16,7 +16,7 @@ import type { Attachment } from "@/lib/types";
 import { analyzeClientRequest } from "@/services/ai";
 import { demoAnalyzeRequest, withDraftMessage } from "@/services/demo-engine";
 
-export const Route = createFileRoute("/requests/new")({
+export const Route = createFileRoute("/_authenticated/requests/new")({
   head: () => ({
     meta: [
       { title: "طلب عميل جديد — SCOPE" },

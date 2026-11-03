@@ -1,5 +1,6 @@
-import { Link } from "@tanstack/react-router";
-import { Plus, RotateCcw } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { LogOut, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import { DemoBadge } from "@/components/common/status-badges";
@@ -17,10 +18,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { useActions } from "@/data/store";
+import { useActions, useAppData } from "@/data/store";
 
 export function AppHeader() {
-  const { resetDemoData } = useActions();
+  const { signOut } = useActions();
+  const { profile } = useAppData();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b bg-background/85 px-4 backdrop-blur sm:px-6">
       <SidebarTrigger className="text-muted-foreground" aria-label="إظهار أو إخفاء القائمة" />
@@ -28,37 +32,38 @@ export function AppHeader() {
       <Tooltip>
         <TooltipTrigger asChild>
           <span className="cursor-default">
-            <DemoBadge label="وضع العرض التجريبي" />
+            <DemoBadge label="التحليل تجريبي" />
           </span>
         </TooltipTrigger>
         <TooltipContent side="bottom" className="max-w-xs text-center">
-          البيانات تجريبية ومحفوظة في هذا المتصفح فقط، والتحليلات ناتجة عن قواعد تجريبية وليست ذكاءً اصطناعيًا.
+          بياناتك محفوظة في حسابك، لكن تحليل الطلبات وكشف التغييرات ناتج عن قواعد تجريبية وليس ذكاءً اصطناعيًا بعد.
         </TooltipContent>
       </Tooltip>
       <div className="ms-auto flex items-center gap-2">
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="ghost" size="sm" className="text-muted-foreground" aria-label="إعادة ضبط البيانات التجريبية">
-              <RotateCcw />
-              <span className="hidden md:inline">إعادة ضبط</span>
+            <Button variant="ghost" size="sm" className="text-muted-foreground" aria-label="تسجيل الخروج">
+              <LogOut />
+              <span className="hidden md:inline">خروج</span>
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>إعادة ضبط البيانات التجريبية؟</AlertDialogTitle>
-              <AlertDialogDescription>
-                ستُحذف كل التغييرات التي أجريتها في هذا المتصفح وتعود البيانات التجريبية الأصلية.
-              </AlertDialogDescription>
+              <AlertDialogTitle>تسجيل الخروج؟</AlertDialogTitle>
+              <AlertDialogDescription dir="auto">{profile.email}</AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className="gap-2">
               <AlertDialogCancel>إلغاء</AlertDialogCancel>
               <AlertDialogAction
-                onClick={() => {
-                  resetDemoData();
-                  toast.success("أُعيدت البيانات التجريبية الأصلية");
+                onClick={async () => {
+                  await queryClient.cancelQueries();
+                  queryClient.clear();
+                  await signOut();
+                  toast.success("تم تسجيل الخروج");
+                  navigate({ to: "/auth", replace: true });
                 }}
               >
-                إعادة الضبط
+                تسجيل الخروج
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

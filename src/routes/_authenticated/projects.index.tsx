@@ -33,7 +33,7 @@ import { latestVersion } from "@/lib/scope";
 import { SCOPE_STATUS_LABEL } from "@/lib/labels";
 import type { ProjectStatus } from "@/lib/types";
 
-export const Route = createFileRoute("/projects/")({
+export const Route = createFileRoute("/_authenticated/projects/")({
   head: () => ({
     meta: [
       { title: "المشاريع — SCOPE" },

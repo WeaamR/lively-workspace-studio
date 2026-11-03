@@ -12,7 +12,7 @@ import { PROJECT_STATUS_LABEL } from "@/lib/labels";
 import type { ProjectStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/projects/$projectId")({
+export const Route = createFileRoute("/_authenticated/projects/$projectId")({
   head: () => ({
     meta: [
       { title: "تفاصيل المشروع — SCOPE" },

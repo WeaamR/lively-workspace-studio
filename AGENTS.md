@@ -10,12 +10,14 @@
 <!-- LOVABLE:END -->
 
 ## Architecture rules
-- UI reads/writes data only through `useAppData()` / `useActions()` in `src/data/store.tsx`; swap the provider internals for Lovable Cloud queries later without touching pages.
+- UI reads/writes data only through `useAppData()` / `useActions()` in `src/data/store.tsx`; each action updates local state via the reducer, then `src/data/remote.ts` writes it to Supabase in a serial queue (browser client, RLS, authenticated user_id).
 - Pure state transitions live in `src/data/reducer.ts` (one action per future DB mutation) so rules stay unit-testable.
 - Types in `src/lib/types.ts` mirror the planned tables (profiles, services, projects, project_messages, scope_versions, scope_items); analysis/change results are jsonb on projects/project_messages.
 - AI analysis and scope comparison go only through `src/services/ai.ts`; they return `not_connected` until a server function exists — never fabricate AI output in the UI.
 - Automation hooks (n8n-ready) are emitted from store actions via `src/services/automation.ts`; webhook URLs must stay server-side.
 - Message templates in `src/lib/scope.ts` are deterministic and built only from the user's own entries.
 - App is RTL: `dir="rtl"` on html plus Radix `DirectionProvider`; use logical utilities (ms/me/ps/pe/start/end) instead of left/right.
-- Phase 1 state persists to localStorage (key in `src/data/store.tsx`), loaded in an effect after mount to avoid hydration mismatch; header offers a reset to seed data.
+- Signed-in pages live under `src/routes/_authenticated/` (ssr:false gate, app shell in its layout); `/auth` is public. Data loads from Supabase after sign-in; no demo rows are inserted.
+- Fields with no table column (profile phone/location/experience/currency, service inclusions/pricing rules) are stored in the auth user's metadata; scope `condition` items and the "sent" status are not persisted.
+- Unconfirmed deadlines: scope_versions.delivery_deadline stays NULL and the question goes in delivery_condition.
 - While AI is not connected, `src/services/demo-engine.ts` (keyword rules) produces results saved with source "demo" and always labeled as non-AI.

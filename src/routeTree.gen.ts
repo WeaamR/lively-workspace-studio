@@ -9,129 +9,150 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as ChangesRouteImport } from './routes/changes'
-import { Route as HistoryRouteImport } from './routes/history'
-import { Route as ProfileRouteImport } from './routes/profile'
-import { Route as ProjectsIndexRouteImport } from './routes/projects.index'
-import { Route as ProjectsProjectIdRouteImport } from './routes/projects.$projectId'
-import { Route as RequestsNewRouteImport } from './routes/requests.new'
-import { Route as ProjectsProjectIdIndexRouteImport } from './routes/projects.$projectId.index'
-import { Route as ProjectsProjectIdAnalysisRouteImport } from './routes/projects.$projectId.analysis'
-import { Route as ProjectsProjectIdChangesRouteImport } from './routes/projects.$projectId.changes'
-import { Route as ProjectsProjectIdHistoryRouteImport } from './routes/projects.$projectId.history'
-import { Route as ProjectsProjectIdScopeRouteImport } from './routes/projects.$projectId.scope'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedChangesRouteImport } from './routes/_authenticated/changes'
+import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
+import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedProjectsIndexRouteImport } from './routes/_authenticated/projects.index'
+import { Route as AuthenticatedProjectsProjectIdRouteImport } from './routes/_authenticated/projects.$projectId'
+import { Route as AuthenticatedRequestsNewRouteImport } from './routes/_authenticated/requests.new'
+import { Route as AuthenticatedProjectsProjectIdIndexRouteImport } from './routes/_authenticated/projects.$projectId.index'
+import { Route as AuthenticatedProjectsProjectIdAnalysisRouteImport } from './routes/_authenticated/projects.$projectId.analysis'
+import { Route as AuthenticatedProjectsProjectIdChangesRouteImport } from './routes/_authenticated/projects.$projectId.changes'
+import { Route as AuthenticatedProjectsProjectIdHistoryRouteImport } from './routes/_authenticated/projects.$projectId.history'
+import { Route as AuthenticatedProjectsProjectIdScopeRouteImport } from './routes/_authenticated/projects.$projectId.scope'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ChangesRoute = ChangesRouteImport.update({
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedChangesRoute = AuthenticatedChangesRouteImport.update({
   id: '/changes',
   path: '/changes',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const HistoryRoute = HistoryRouteImport.update({
+const AuthenticatedHistoryRoute = AuthenticatedHistoryRouteImport.update({
   id: '/history',
   path: '/history',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const ProfileRoute = ProfileRouteImport.update({
+const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const ProjectsIndexRoute = ProjectsIndexRouteImport.update({
-  id: '/projects/',
-  path: '/projects/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProjectsProjectIdRoute = ProjectsProjectIdRouteImport.update({
-  id: '/projects/$projectId',
-  path: '/projects/$projectId',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RequestsNewRoute = RequestsNewRouteImport.update({
-  id: '/requests/new',
-  path: '/requests/new',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProjectsProjectIdIndexRoute = ProjectsProjectIdIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => ProjectsProjectIdRoute,
-} as any)
-const ProjectsProjectIdAnalysisRoute =
-  ProjectsProjectIdAnalysisRouteImport.update({
+const AuthenticatedProjectsIndexRoute =
+  AuthenticatedProjectsIndexRouteImport.update({
+    id: '/projects/',
+    path: '/projects/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedProjectsProjectIdRoute =
+  AuthenticatedProjectsProjectIdRouteImport.update({
+    id: '/projects/$projectId',
+    path: '/projects/$projectId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedRequestsNewRoute =
+  AuthenticatedRequestsNewRouteImport.update({
+    id: '/requests/new',
+    path: '/requests/new',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedProjectsProjectIdIndexRoute =
+  AuthenticatedProjectsProjectIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedProjectsProjectIdRoute,
+  } as any)
+const AuthenticatedProjectsProjectIdAnalysisRoute =
+  AuthenticatedProjectsProjectIdAnalysisRouteImport.update({
     id: '/analysis',
     path: '/analysis',
-    getParentRoute: () => ProjectsProjectIdRoute,
+    getParentRoute: () => AuthenticatedProjectsProjectIdRoute,
   } as any)
-const ProjectsProjectIdChangesRoute =
-  ProjectsProjectIdChangesRouteImport.update({
+const AuthenticatedProjectsProjectIdChangesRoute =
+  AuthenticatedProjectsProjectIdChangesRouteImport.update({
     id: '/changes',
     path: '/changes',
-    getParentRoute: () => ProjectsProjectIdRoute,
+    getParentRoute: () => AuthenticatedProjectsProjectIdRoute,
   } as any)
-const ProjectsProjectIdHistoryRoute =
-  ProjectsProjectIdHistoryRouteImport.update({
+const AuthenticatedProjectsProjectIdHistoryRoute =
+  AuthenticatedProjectsProjectIdHistoryRouteImport.update({
     id: '/history',
     path: '/history',
-    getParentRoute: () => ProjectsProjectIdRoute,
+    getParentRoute: () => AuthenticatedProjectsProjectIdRoute,
   } as any)
-const ProjectsProjectIdScopeRoute = ProjectsProjectIdScopeRouteImport.update({
-  id: '/scope',
-  path: '/scope',
-  getParentRoute: () => ProjectsProjectIdRoute,
-} as any)
+const AuthenticatedProjectsProjectIdScopeRoute =
+  AuthenticatedProjectsProjectIdScopeRouteImport.update({
+    id: '/scope',
+    path: '/scope',
+    getParentRoute: () => AuthenticatedProjectsProjectIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/changes': typeof ChangesRoute
-  '/history': typeof HistoryRoute
-  '/profile': typeof ProfileRoute
-  '/projects/$projectId': typeof ProjectsProjectIdRouteWithChildren
-  '/requests/new': typeof RequestsNewRoute
-  '/projects/': typeof ProjectsIndexRoute
-  '/projects/$projectId/analysis': typeof ProjectsProjectIdAnalysisRoute
-  '/projects/$projectId/changes': typeof ProjectsProjectIdChangesRoute
-  '/projects/$projectId/history': typeof ProjectsProjectIdHistoryRoute
-  '/projects/$projectId/scope': typeof ProjectsProjectIdScopeRoute
-  '/projects/$projectId/': typeof ProjectsProjectIdIndexRoute
+  '/': typeof AuthenticatedIndexRoute
+  '/auth': typeof AuthRoute
+  '/changes': typeof AuthenticatedChangesRoute
+  '/history': typeof AuthenticatedHistoryRoute
+  '/profile': typeof AuthenticatedProfileRoute
+  '/projects/$projectId': typeof AuthenticatedProjectsProjectIdRouteWithChildren
+  '/requests/new': typeof AuthenticatedRequestsNewRoute
+  '/projects/': typeof AuthenticatedProjectsIndexRoute
+  '/projects/$projectId/analysis': typeof AuthenticatedProjectsProjectIdAnalysisRoute
+  '/projects/$projectId/changes': typeof AuthenticatedProjectsProjectIdChangesRoute
+  '/projects/$projectId/history': typeof AuthenticatedProjectsProjectIdHistoryRoute
+  '/projects/$projectId/scope': typeof AuthenticatedProjectsProjectIdScopeRoute
+  '/projects/$projectId/': typeof AuthenticatedProjectsProjectIdIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/changes': typeof ChangesRoute
-  '/history': typeof HistoryRoute
-  '/profile': typeof ProfileRoute
-  '/requests/new': typeof RequestsNewRoute
-  '/projects': typeof ProjectsIndexRoute
-  '/projects/$projectId/analysis': typeof ProjectsProjectIdAnalysisRoute
-  '/projects/$projectId/changes': typeof ProjectsProjectIdChangesRoute
-  '/projects/$projectId/history': typeof ProjectsProjectIdHistoryRoute
-  '/projects/$projectId/scope': typeof ProjectsProjectIdScopeRoute
-  '/projects/$projectId': typeof ProjectsProjectIdIndexRoute
+  '/auth': typeof AuthRoute
+  '/changes': typeof AuthenticatedChangesRoute
+  '/history': typeof AuthenticatedHistoryRoute
+  '/profile': typeof AuthenticatedProfileRoute
+  '/': typeof AuthenticatedIndexRoute
+  '/requests/new': typeof AuthenticatedRequestsNewRoute
+  '/projects': typeof AuthenticatedProjectsIndexRoute
+  '/projects/$projectId/analysis': typeof AuthenticatedProjectsProjectIdAnalysisRoute
+  '/projects/$projectId/changes': typeof AuthenticatedProjectsProjectIdChangesRoute
+  '/projects/$projectId/history': typeof AuthenticatedProjectsProjectIdHistoryRoute
+  '/projects/$projectId/scope': typeof AuthenticatedProjectsProjectIdScopeRoute
+  '/projects/$projectId': typeof AuthenticatedProjectsProjectIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/changes': typeof ChangesRoute
-  '/history': typeof HistoryRoute
-  '/profile': typeof ProfileRoute
-  '/projects/$projectId': typeof ProjectsProjectIdRouteWithChildren
-  '/requests/new': typeof RequestsNewRoute
-  '/projects/': typeof ProjectsIndexRoute
-  '/projects/$projectId/analysis': typeof ProjectsProjectIdAnalysisRoute
-  '/projects/$projectId/changes': typeof ProjectsProjectIdChangesRoute
-  '/projects/$projectId/history': typeof ProjectsProjectIdHistoryRoute
-  '/projects/$projectId/scope': typeof ProjectsProjectIdScopeRoute
-  '/projects/$projectId/': typeof ProjectsProjectIdIndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/_authenticated/changes': typeof AuthenticatedChangesRoute
+  '/_authenticated/history': typeof AuthenticatedHistoryRoute
+  '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/projects/$projectId': typeof AuthenticatedProjectsProjectIdRouteWithChildren
+  '/_authenticated/requests/new': typeof AuthenticatedRequestsNewRoute
+  '/_authenticated/projects/': typeof AuthenticatedProjectsIndexRoute
+  '/_authenticated/projects/$projectId/analysis': typeof AuthenticatedProjectsProjectIdAnalysisRoute
+  '/_authenticated/projects/$projectId/changes': typeof AuthenticatedProjectsProjectIdChangesRoute
+  '/_authenticated/projects/$projectId/history': typeof AuthenticatedProjectsProjectIdHistoryRoute
+  '/_authenticated/projects/$projectId/scope': typeof AuthenticatedProjectsProjectIdScopeRoute
+  '/_authenticated/projects/$projectId/': typeof AuthenticatedProjectsProjectIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/auth'
     | '/changes'
     | '/history'
     | '/profile'
@@ -145,10 +166,11 @@ export interface FileRouteTypes {
     | '/projects/$projectId/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
+    | '/auth'
     | '/changes'
     | '/history'
     | '/profile'
+    | '/'
     | '/requests/new'
     | '/projects'
     | '/projects/$projectId/analysis'
@@ -158,146 +180,184 @@ export interface FileRouteTypes {
     | '/projects/$projectId'
   id:
     | '__root__'
-    | '/'
-    | '/changes'
-    | '/history'
-    | '/profile'
-    | '/projects/$projectId'
-    | '/requests/new'
-    | '/projects/'
-    | '/projects/$projectId/analysis'
-    | '/projects/$projectId/changes'
-    | '/projects/$projectId/history'
-    | '/projects/$projectId/scope'
-    | '/projects/$projectId/'
+    | '/_authenticated'
+    | '/auth'
+    | '/_authenticated/changes'
+    | '/_authenticated/history'
+    | '/_authenticated/profile'
+    | '/_authenticated/'
+    | '/_authenticated/projects/$projectId'
+    | '/_authenticated/requests/new'
+    | '/_authenticated/projects/'
+    | '/_authenticated/projects/$projectId/analysis'
+    | '/_authenticated/projects/$projectId/changes'
+    | '/_authenticated/projects/$projectId/history'
+    | '/_authenticated/projects/$projectId/scope'
+    | '/_authenticated/projects/$projectId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  ChangesRoute: typeof ChangesRoute
-  HistoryRoute: typeof HistoryRoute
-  ProfileRoute: typeof ProfileRoute
-  ProjectsProjectIdRoute: typeof ProjectsProjectIdRouteWithChildren
-  RequestsNewRoute: typeof RequestsNewRoute
-  ProjectsIndexRoute: typeof ProjectsIndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/': {
+      id: '/_authenticated/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/changes': {
-      id: '/changes'
+    '/_authenticated/changes': {
+      id: '/_authenticated/changes'
       path: '/changes'
       fullPath: '/changes'
-      preLoaderRoute: typeof ChangesRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedChangesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/history': {
-      id: '/history'
+    '/_authenticated/history': {
+      id: '/_authenticated/history'
       path: '/history'
       fullPath: '/history'
-      preLoaderRoute: typeof HistoryRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedHistoryRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/profile': {
-      id: '/profile'
+    '/_authenticated/profile': {
+      id: '/_authenticated/profile'
       path: '/profile'
       fullPath: '/profile'
-      preLoaderRoute: typeof ProfileRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/projects/': {
-      id: '/projects/'
+    '/_authenticated/projects/': {
+      id: '/_authenticated/projects/'
       path: '/projects'
       fullPath: '/projects/'
-      preLoaderRoute: typeof ProjectsIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedProjectsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/projects/$projectId': {
-      id: '/projects/$projectId'
+    '/_authenticated/projects/$projectId': {
+      id: '/_authenticated/projects/$projectId'
       path: '/projects/$projectId'
       fullPath: '/projects/$projectId'
-      preLoaderRoute: typeof ProjectsProjectIdRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedProjectsProjectIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/requests/new': {
-      id: '/requests/new'
+    '/_authenticated/requests/new': {
+      id: '/_authenticated/requests/new'
       path: '/requests/new'
       fullPath: '/requests/new'
-      preLoaderRoute: typeof RequestsNewRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedRequestsNewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/projects/$projectId/': {
-      id: '/projects/$projectId/'
+    '/_authenticated/projects/$projectId/': {
+      id: '/_authenticated/projects/$projectId/'
       path: '/'
       fullPath: '/projects/$projectId/'
-      preLoaderRoute: typeof ProjectsProjectIdIndexRouteImport
-      parentRoute: typeof ProjectsProjectIdRoute
+      preLoaderRoute: typeof AuthenticatedProjectsProjectIdIndexRouteImport
+      parentRoute: typeof AuthenticatedProjectsProjectIdRoute
     }
-    '/projects/$projectId/analysis': {
-      id: '/projects/$projectId/analysis'
+    '/_authenticated/projects/$projectId/analysis': {
+      id: '/_authenticated/projects/$projectId/analysis'
       path: '/analysis'
       fullPath: '/projects/$projectId/analysis'
-      preLoaderRoute: typeof ProjectsProjectIdAnalysisRouteImport
-      parentRoute: typeof ProjectsProjectIdRoute
+      preLoaderRoute: typeof AuthenticatedProjectsProjectIdAnalysisRouteImport
+      parentRoute: typeof AuthenticatedProjectsProjectIdRoute
     }
-    '/projects/$projectId/changes': {
-      id: '/projects/$projectId/changes'
+    '/_authenticated/projects/$projectId/changes': {
+      id: '/_authenticated/projects/$projectId/changes'
       path: '/changes'
       fullPath: '/projects/$projectId/changes'
-      preLoaderRoute: typeof ProjectsProjectIdChangesRouteImport
-      parentRoute: typeof ProjectsProjectIdRoute
+      preLoaderRoute: typeof AuthenticatedProjectsProjectIdChangesRouteImport
+      parentRoute: typeof AuthenticatedProjectsProjectIdRoute
     }
-    '/projects/$projectId/history': {
-      id: '/projects/$projectId/history'
+    '/_authenticated/projects/$projectId/history': {
+      id: '/_authenticated/projects/$projectId/history'
       path: '/history'
       fullPath: '/projects/$projectId/history'
-      preLoaderRoute: typeof ProjectsProjectIdHistoryRouteImport
-      parentRoute: typeof ProjectsProjectIdRoute
+      preLoaderRoute: typeof AuthenticatedProjectsProjectIdHistoryRouteImport
+      parentRoute: typeof AuthenticatedProjectsProjectIdRoute
     }
-    '/projects/$projectId/scope': {
-      id: '/projects/$projectId/scope'
+    '/_authenticated/projects/$projectId/scope': {
+      id: '/_authenticated/projects/$projectId/scope'
       path: '/scope'
       fullPath: '/projects/$projectId/scope'
-      preLoaderRoute: typeof ProjectsProjectIdScopeRouteImport
-      parentRoute: typeof ProjectsProjectIdRoute
+      preLoaderRoute: typeof AuthenticatedProjectsProjectIdScopeRouteImport
+      parentRoute: typeof AuthenticatedProjectsProjectIdRoute
     }
   }
 }
 
-interface ProjectsProjectIdRouteChildren {
-  ProjectsProjectIdAnalysisRoute: typeof ProjectsProjectIdAnalysisRoute
-  ProjectsProjectIdChangesRoute: typeof ProjectsProjectIdChangesRoute
-  ProjectsProjectIdHistoryRoute: typeof ProjectsProjectIdHistoryRoute
-  ProjectsProjectIdScopeRoute: typeof ProjectsProjectIdScopeRoute
-  ProjectsProjectIdIndexRoute: typeof ProjectsProjectIdIndexRoute
+interface AuthenticatedProjectsProjectIdRouteChildren {
+  AuthenticatedProjectsProjectIdAnalysisRoute: typeof AuthenticatedProjectsProjectIdAnalysisRoute
+  AuthenticatedProjectsProjectIdChangesRoute: typeof AuthenticatedProjectsProjectIdChangesRoute
+  AuthenticatedProjectsProjectIdHistoryRoute: typeof AuthenticatedProjectsProjectIdHistoryRoute
+  AuthenticatedProjectsProjectIdScopeRoute: typeof AuthenticatedProjectsProjectIdScopeRoute
+  AuthenticatedProjectsProjectIdIndexRoute: typeof AuthenticatedProjectsProjectIdIndexRoute
 }
 
-const ProjectsProjectIdRouteChildren: ProjectsProjectIdRouteChildren = {
-  ProjectsProjectIdAnalysisRoute: ProjectsProjectIdAnalysisRoute,
-  ProjectsProjectIdChangesRoute: ProjectsProjectIdChangesRoute,
-  ProjectsProjectIdHistoryRoute: ProjectsProjectIdHistoryRoute,
-  ProjectsProjectIdScopeRoute: ProjectsProjectIdScopeRoute,
-  ProjectsProjectIdIndexRoute: ProjectsProjectIdIndexRoute,
+const AuthenticatedProjectsProjectIdRouteChildren: AuthenticatedProjectsProjectIdRouteChildren =
+  {
+    AuthenticatedProjectsProjectIdAnalysisRoute:
+      AuthenticatedProjectsProjectIdAnalysisRoute,
+    AuthenticatedProjectsProjectIdChangesRoute:
+      AuthenticatedProjectsProjectIdChangesRoute,
+    AuthenticatedProjectsProjectIdHistoryRoute:
+      AuthenticatedProjectsProjectIdHistoryRoute,
+    AuthenticatedProjectsProjectIdScopeRoute:
+      AuthenticatedProjectsProjectIdScopeRoute,
+    AuthenticatedProjectsProjectIdIndexRoute:
+      AuthenticatedProjectsProjectIdIndexRoute,
+  }
+
+const AuthenticatedProjectsProjectIdRouteWithChildren =
+  AuthenticatedProjectsProjectIdRoute._addFileChildren(
+    AuthenticatedProjectsProjectIdRouteChildren,
+  )
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedChangesRoute: typeof AuthenticatedChangesRoute
+  AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
+  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedProjectsProjectIdRoute: typeof AuthenticatedProjectsProjectIdRouteWithChildren
+  AuthenticatedRequestsNewRoute: typeof AuthenticatedRequestsNewRoute
+  AuthenticatedProjectsIndexRoute: typeof AuthenticatedProjectsIndexRoute
 }
 
-const ProjectsProjectIdRouteWithChildren =
-  ProjectsProjectIdRoute._addFileChildren(ProjectsProjectIdRouteChildren)
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedChangesRoute: AuthenticatedChangesRoute,
+  AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
+  AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedProjectsProjectIdRoute:
+    AuthenticatedProjectsProjectIdRouteWithChildren,
+  AuthenticatedRequestsNewRoute: AuthenticatedRequestsNewRoute,
+  AuthenticatedProjectsIndexRoute: AuthenticatedProjectsIndexRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  ChangesRoute: ChangesRoute,
-  HistoryRoute: HistoryRoute,
-  ProfileRoute: ProfileRoute,
-  ProjectsProjectIdRoute: ProjectsProjectIdRouteWithChildren,
-  RequestsNewRoute: RequestsNewRoute,
-  ProjectsIndexRoute: ProjectsIndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
