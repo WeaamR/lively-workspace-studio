@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAppData } from "@/data/store";
 import { ACTIVITY_LABEL, buildActivity, type ActivityType } from "@/lib/activity";
 
-export const Route = createFileRoute("/history")({
+export const Route = createFileRoute("/_authenticated/history")({
   head: () => ({
     meta: [
       { title: "سجل المشاريع — SCOPE" },

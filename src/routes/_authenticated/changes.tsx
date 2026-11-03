@@ -10,7 +10,7 @@ import { useAppData } from "@/data/store";
 import { formatDate } from "@/lib/format";
 import { latestApproved } from "@/lib/scope";
 
-export const Route = createFileRoute("/changes")({
+export const Route = createFileRoute("/_authenticated/changes")({
   head: () => ({
     meta: [
       { title: "كشف التغييرات — SCOPE" },

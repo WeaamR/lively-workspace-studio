@@ -9,7 +9,7 @@ import { useProjectBundle } from "@/data/selectors";
 import { formatDate, formatFileSize, formatMoney } from "@/lib/format";
 import { PRICING_MODEL_LABEL } from "@/lib/labels";
 
-export const Route = createFileRoute("/projects/$projectId/")({
+export const Route = createFileRoute("/_authenticated/projects/$projectId/")({
   component: ProjectOverview,
 });
 

@@ -28,7 +28,7 @@ import { formatMoney } from "@/lib/format";
 import { PRICING_MODEL_LABEL } from "@/lib/labels";
 import type { Profile, Service } from "@/lib/types";
 
-export const Route = createFileRoute("/profile")({
+export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
     meta: [
       { title: "الملف الشخصي والخدمات — SCOPE" },
