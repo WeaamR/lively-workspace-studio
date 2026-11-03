@@ -142,6 +142,17 @@ function useCreateActions(dispatch: (a: Action) => void, getState: () => AppData
         dispatch({ type: "message/update", id: messageId, patch: { change_analysis } });
       },
 
+      /**
+       * Deletes the change review record only. The original client message
+       * stays in project_messages and the project is untouched.
+       */
+      deleteChangeReview(messageId: string): boolean {
+        const m = getState().messages.find((x) => x.id === messageId);
+        if (!m?.change_analysis) return false;
+        dispatch({ type: "message/update", id: messageId, patch: { change_analysis: null } });
+        return true;
+      },
+
       /** New draft version, copied from the latest version or seeded from the project's service. */
       createScopeVersion(projectId: string) {
         const project = getState().projects.find((p) => p.id === projectId);
@@ -231,6 +242,20 @@ function useCreateActions(dispatch: (a: Action) => void, getState: () => AppData
           .map((i) => ({ ...i, id: newId(), scope_version_id: versionId }));
         dispatch({ type: "scope/saveAsNew", fromId: id, version, items });
         return version.version_number;
+      },
+
+      /**
+       * Deletes a draft scope version with its items. Blocked when the version
+       * is not a draft or when a recorded change review references it.
+       */
+      deleteScopeDraft(id: string): { ok: boolean; reason?: "not_draft" | "referenced" } {
+        const state = getState();
+        const v = state.scopeVersions.find((x) => x.id === id);
+        if (!v || v.status !== "draft") return { ok: false, reason: "not_draft" };
+        const referenced = state.messages.some((m) => m.change_analysis?.scope_version_id === id);
+        if (referenced) return { ok: false, reason: "referenced" };
+        dispatch({ type: "scope/delete", id });
+        return { ok: true };
       },
 
       approveScope(id: string) {
