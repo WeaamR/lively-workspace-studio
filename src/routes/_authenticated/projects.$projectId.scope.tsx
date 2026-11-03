@@ -297,6 +297,56 @@ function VersionActions({ version, itemCount }: { version: ScopeVersion; itemCou
   return null;
 }
 
+function DeleteDraftButton({ version }: { version: ScopeVersion }) {
+  const actions = useActions();
+  const [deleting, setDeleting] = useState(false);
+
+  const confirmDelete = () => {
+    if (deleting) return; // prevent duplicate delete requests
+    setDeleting(true);
+    const res = actions.deleteScopeDraft(version.id);
+    setDeleting(false);
+    if (res.ok) {
+      toast.success(`حُذفت مسودة النسخة ${version.version_number}`, { description: "حُذفت بنود النطاق المرتبطة بها أيضًا." });
+    } else if (res.reason === "referenced") {
+      toast.error("لا يمكن حذف هذه المسودة", {
+        description: "يوجد طلب تغيير مسجّل قورن بهذه النسخة. احذف طلب التغيير أولًا من صفحة كشف التغييرات.",
+      });
+    } else {
+      toast.error("لا يمكن حذف هذه النسخة", { description: "يمكن حذف المسودات فقط." });
+    }
+  };
+
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-8 shrink-0 text-muted-foreground hover:text-destructive"
+          title="حذف المسودة"
+          aria-label="حذف المسودة"
+          disabled={deleting}
+        >
+          {deleting ? <Loader2 className="animate-spin" /> : <Trash2 />}
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>حذف مسودة النطاق</AlertDialogTitle>
+          <AlertDialogDescription>
+            هل أنت متأكد من حذف هذه المسودة؟ سيتم حذف بنود النطاق المرتبطة بها أيضًا.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter className="gap-2">
+          <AlertDialogCancel>إلغاء</AlertDialogCancel>
+          <AlertDialogAction onClick={confirmDelete}>حذف</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
 function ApproveButton({ version }: { version: ScopeVersion }) {
   const actions = useActions();
   return (
