@@ -252,7 +252,7 @@ const EMPTY_TEXT: Record<ScopeCategory, string> = {
   open_item: "لا توجد نقاط معلّقة — جميع البنود أعلاه مؤكدة.",
 };
 
-function VersionActions({ version, itemCount }: { version: ScopeVersion; itemCount: number }) {
+function VersionActions({ version, itemCount, projectId }: { version: ScopeVersion; itemCount: number; projectId: string }) {
   const actions = useActions();
 
   if (version.status === "draft") {
@@ -261,12 +261,24 @@ function VersionActions({ version, itemCount }: { version: ScopeVersion; itemCou
         <Button
           variant="outline"
           onClick={() => {
-            const n = actions.saveScopeDraft(version.id);
-            if (n) toast.success(`حُفظت المسودة كنسخة جديدة رقم ${n}`, { description: "لم يُرسل النطاق ولم يُعتمد." });
+            if (actions.saveScopeDraft(version.id))
+              toast.success(`حُفظت المسودة — النسخة ${version.version_number} محدّثة`, {
+                description: "بقي نفس الإصدار بنفس الرقم. لم يُرسل النطاق ولم يُعتمد.",
+              });
           }}
         >
           <Save />
           حفظ المسودة
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() => {
+            actions.createScopeVersion(projectId);
+            toast.success("أُنشئت نسخة معدّلة جديدة", { description: "حُفظت المسودة السابقة كنسخة سابقة غير معتمدة." });
+          }}
+        >
+          <CopyPlus />
+          إنشاء نسخة معدّلة
         </Button>
         <Button
           variant="outline"
@@ -292,6 +304,23 @@ function VersionActions({ version, itemCount }: { version: ScopeVersion; itemCou
           إعادة إلى المسودة
         </Button>
         <ApproveButton version={version} />
+      </div>
+    );
+  }
+
+  if (version.status === "approved") {
+    return (
+      <div className="flex flex-wrap gap-2">
+        <Button
+          variant="outline"
+          onClick={() => {
+            actions.createScopeVersion(projectId);
+            toast.success("أُنشئت نسخة معدّلة كمسودة", { description: "بقيت النسخة المعتمدة سارية حتى اعتماد النسخة الجديدة." });
+          }}
+        >
+          <CopyPlus />
+          إنشاء نسخة معدّلة
+        </Button>
       </div>
     );
   }
