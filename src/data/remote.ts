@@ -454,18 +454,42 @@ export async function persistAction(action: Action, prev: AppData, next: AppData
     case "scope/revertToDraft":
       return; // no "sent" status in scope_versions; stays a draft in the database
 
+
     case "scope/approve": {
-      const target = next.scopeVersions.find((v) => v.id === action.id);
-      if (!target || target.status !== "approved") return;
-      const superseded = next.scopeVersions.filter(
-        (v) => v.project_id === target.project_id && v.status === "superseded" && prev.scopeVersions.find((p) => p.id === v.id)?.status === "approved",
+      const target = next.scopeVersions.find(
+        (v) => v.id === action.id
       );
-      for (const v of superseded) check(await supabase.from("scope_versions").update({ status: "superseded" }).eq("id", v.id));
-      check(await supabase.from("scope_versions").update({ status: "approved", approved_at: target.approved_at }).eq("id", target.id));
-      const p = next.projects.find((x) => x.id === target.project_id);
-      if (p) check(await supabase.from("projects").update({ status: projectStatusToDb(p.status) }).eq("id", p.id));
+
+      if (!target || target.status !== "approved") return;
+
+      // Approve scope version through the protected database RPC.
+      // The RPC validates ownership and unresolved items,
+      // approves the new version, and supersedes the previous one.
+      check(
+        await supabase.rpc("approve_scope_version", {
+          p_scope_version_id: target.id,
+        }),
+      );
+
+      // Update project status after successful approval.
+      const project = next.projects.find(
+        (p) => p.id === target.project_id
+      );
+
+      if (project) {
+        check(
+          await supabase
+            .from("projects")
+            .update({
+              status: projectStatusToDb(project.status),
+            })
+            .eq("id", project.id),
+        );
+      }
+
       return;
     }
+
 
     case "scope/delete": {
       if (next.scopeVersions.some((v) => v.id === action.id)) return; // rejected by reducer
