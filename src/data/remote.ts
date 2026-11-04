@@ -9,6 +9,12 @@
 import type { User } from "@supabase/supabase-js";
 
 import { supabase } from "@/integrations/supabase/client";
+
+import {
+  resolveScopeItem as resolveScopeItemEdge,
+  type ResolveScopeItemInput,
+} from "@/lib/scope-api";
+
 import type {
   AppData,
   ChangeAnalysis,
@@ -302,8 +308,30 @@ async function updateMeta(patch: Partial<Meta>) {
   check(await supabase.auth.updateUser({ data: patch }));
 }
 
+
+export async function resolveScopeItemRecord(
+  input: ResolveScopeItemInput
+) {
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    throw new Error("يرجى تسجيل الدخول قبل حسم البند.");
+  }
+
+  return await resolveScopeItemEdge(input);
+}
+
+
 export async function persistAction(action: Action, prev: AppData, next: AppData, userId: string): Promise<void> {
   switch (action.type) {
+    case "scopeItem/resolve":
+      // Already persisted by the authenticated Edge Function.
+      // Do not perform a second direct database update.
+      return;
+      
     case "data/replace":
       return;
 
