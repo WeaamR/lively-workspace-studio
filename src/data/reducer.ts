@@ -23,9 +23,9 @@ export type Action =
   | { type: "project/delete"; id: string }
   | { type: "message/add"; message: ProjectMessage }
   | { type: "message/update"; id: string; patch: Partial<ProjectMessage> }
-  | { type: "scope/create"; version: ScopeVersion; items: ScopeItem[] }
+  | { type: "scope/create"; version: ScopeVersion; items: ScopeItem[]; supersedeId?: string }
   | { type: "scope/update"; id: string; patch: Partial<Pick<ScopeVersion, "delivery_deadline" | "revision_rounds" | "notes" | "deadline_status" | "deadline_note">> }
-  | { type: "scope/saveAsNew"; fromId: string; version: ScopeVersion; items: ScopeItem[] }
+  | { type: "scope/saveDraft"; id: string }
   | { type: "scope/send"; id: string; at: string }
   | { type: "scope/revertToDraft"; id: string }
   | { type: "scope/approve"; id: string; at: string }
@@ -98,12 +98,20 @@ export function reducer(state: AppData, action: Action): AppData {
         messages: state.messages.map((m) => (m.id === action.id ? { ...m, ...action.patch } : m)),
       };
 
-    case "scope/create":
+    case "scope/create": {
+      // A new draft supersedes a previous unapproved working draft only;
+      // an approved version stays approved until the new one is approved.
+      const sup = action.supersedeId ? state.scopeVersions.find((v) => v.id === action.supersedeId) : null;
+      const supersede = sup && !sup.approved_at && (sup.status === "draft" || sup.status === "pending_approval");
       return {
         ...state,
-        scopeVersions: [...state.scopeVersions, action.version],
+        scopeVersions: [
+          ...state.scopeVersions.map((v) => (supersede && v.id === sup!.id ? { ...v, status: "superseded" as const } : v)),
+          action.version,
+        ],
         scopeItems: [...state.scopeItems, ...action.items],
       };
+    }
 
     case "scope/update":
       if (!isDraft(state, action.id)) return state;
@@ -112,16 +120,11 @@ export function reducer(state: AppData, action: Action): AppData {
         scopeVersions: state.scopeVersions.map((v) => (v.id === action.id ? { ...v, ...action.patch } : v)),
       };
 
-    case "scope/saveAsNew":
-      if (!isDraft(state, action.fromId)) return state;
-      return {
-        ...state,
-        scopeVersions: [
-          ...state.scopeVersions.map((v) => (v.id === action.fromId ? { ...v, status: "superseded" as const } : v)),
-          action.version,
-        ],
-        scopeItems: [...state.scopeItems, ...action.items],
-      };
+    case "scope/saveDraft":
+      // Saving a draft updates the same record; fields and items are already
+      // persisted by their own actions, so no state change happens here.
+      if (!isDraft(state, action.id)) return state;
+      return state;
 
     case "scope/send":
       return {
@@ -162,9 +165,11 @@ export function reducer(state: AppData, action: Action): AppData {
     }
 
     case "scope/delete": {
-      // Only drafts can be deleted; approved/superseded/sent versions are immutable history.
+      // Deletable: drafts and superseded versions that were never approved.
+      // Anything with approved_at set, or currently approved/sent, is immutable history.
       const target = state.scopeVersions.find((v) => v.id === action.id);
-      if (!target || target.status !== "draft") return state;
+      if (!target || target.approved_at) return state;
+      if (target.status !== "draft" && target.status !== "superseded") return state;
       return {
         ...state,
         scopeVersions: state.scopeVersions.filter((v) => v.id !== action.id),
