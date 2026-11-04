@@ -6,6 +6,7 @@ import {
   PROJECT_STATUS_LABEL,
   SCOPE_STATUS_LABEL,
   SOURCE_LABEL,
+  versionStateLabel,
 } from "@/lib/labels";
 import type { ChangeClassification, ProjectStatus, ResultSource, ScopeStatus } from "@/lib/types";
 
@@ -37,6 +38,11 @@ export function ProjectStatusBadge({ status }: { status: ProjectStatus }) {
 
 export function ScopeStatusBadge({ status }: { status: ScopeStatus }) {
   return <Badge variant={SCOPE_VARIANT[status]}>{SCOPE_STATUS_LABEL[status]}</Badge>;
+}
+
+/** History-aware label: distinguishes never-approved superseded versions from previously approved ones. */
+export function VersionStateBadge({ version }: { version: { status: ScopeStatus; approved_at: string | null } }) {
+  return <Badge variant={SCOPE_VARIANT[version.status]}>{versionStateLabel(version)}</Badge>;
 }
 
 export function ClassificationBadge({ value }: { value: ChangeClassification }) {

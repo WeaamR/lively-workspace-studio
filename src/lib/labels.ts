@@ -21,6 +21,23 @@ export const SCOPE_STATUS_LABEL: Record<ScopeStatus, string> = {
   superseded: "نسخة سابقة",
 };
 
+/**
+ * History label for a scope version, distinguishing versions that were once
+ * approved from those that never were (uses status + approved_at).
+ */
+export function versionStateLabel(v: { status: ScopeStatus; approved_at: string | null }): string {
+  switch (v.status) {
+    case "draft":
+      return "مسودة حالية";
+    case "pending_approval":
+      return "بانتظار موافقة العميل";
+    case "approved":
+      return "نطاق معتمد";
+    case "superseded":
+      return v.approved_at ? "نسخة سبق اعتمادها" : "نسخة سابقة غير معتمدة";
+  }
+}
+
 export const CLASSIFICATION_LABEL: Record<ChangeClassification, string> = {
   within_scope: "ضمن النطاق المتفق عليه",
   additional_work: "عمل إضافي",
