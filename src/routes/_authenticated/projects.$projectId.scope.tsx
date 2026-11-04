@@ -338,13 +338,13 @@ function DeleteDraftButton({ version }: { version: ScopeVersion }) {
     const res = actions.deleteScopeDraft(version.id);
     setDeleting(false);
     if (res.ok) {
-      toast.success(`حُذفت مسودة النسخة ${version.version_number}`, { description: "حُذفت بنود النطاق المرتبطة بها أيضًا." });
+      toast.success(`حُذفت النسخة ${version.version_number}`, { description: "حُذفت بنود النطاق المرتبطة بها أيضًا." });
     } else if (res.reason === "referenced") {
-      toast.error("لا يمكن حذف هذه المسودة", {
+      toast.error("لا يمكن حذف هذه النسخة", {
         description: "يوجد طلب تغيير مسجّل قورن بهذه النسخة. احذف طلب التغيير أولًا من صفحة كشف التغييرات.",
       });
     } else {
-      toast.error("لا يمكن حذف هذه النسخة", { description: "يمكن حذف المسودات فقط." });
+      toast.error("لا يمكن حذف هذه النسخة", { description: "يمكن حذف المسودات والنسخ السابقة غير المعتمدة فقط." });
     }
   };
 
@@ -355,8 +355,8 @@ function DeleteDraftButton({ version }: { version: ScopeVersion }) {
           variant="ghost"
           size="icon"
           className="size-8 shrink-0 text-muted-foreground hover:text-destructive"
-          title="حذف المسودة"
-          aria-label="حذف المسودة"
+          title="حذف النسخة"
+          aria-label="حذف النسخة"
           disabled={deleting}
         >
           {deleting ? <Loader2 className="animate-spin" /> : <Trash2 />}
@@ -364,9 +364,10 @@ function DeleteDraftButton({ version }: { version: ScopeVersion }) {
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>حذف مسودة النطاق</AlertDialogTitle>
+          <AlertDialogTitle>حذف نسخة النطاق</AlertDialogTitle>
           <AlertDialogDescription>
-            هل أنت متأكد من حذف هذه المسودة؟ سيتم حذف بنود النطاق المرتبطة بها أيضًا.
+            هل أنت متأكد من حذف النسخة {version.version_number}؟ سيتم حذف بنود النطاق المرتبطة بها أيضًا، ولن يتأثر
+            المشروع أو رسائل العميل أو النسخ الأخرى.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="gap-2">
