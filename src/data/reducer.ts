@@ -32,6 +32,12 @@ export type Action =
   | { type: "scope/delete"; id: string }
   | { type: "scopeItem/add"; item: ScopeItem }
   | { type: "scopeItem/update"; id: string; content: string }
+  | {
+    type: "scopeItem/resolve";
+    id: string;
+    resolved_category: Exclude<ScopeCategory, "condition" | "open_item">;
+    resolved_title: string;
+  }
   | { type: "scopeItem/remove"; id: string };
 
 function isDraft(state: AppData, versionId: string): boolean {
@@ -189,6 +195,35 @@ export function reducer(state: AppData, action: Action): AppData {
         scopeItems: state.scopeItems.map((i) => (i.id === action.id ? { ...i, content: action.content } : i)),
       };
     }
+
+    
+    case "scopeItem/resolve": {
+      const item = state.scopeItems.find(
+        (i) => i.id === action.id
+      );
+
+      if (
+        !item ||
+        item.category !== "open_item" ||
+        !isDraft(state, item.scope_version_id)
+      ) {
+        return state;
+      }
+
+      return {
+        ...state,
+        scopeItems: state.scopeItems.map((i) =>
+          i.id === action.id
+            ? {
+                ...i,
+                category: action.resolved_category,
+                content: action.resolved_title,
+              }
+            : i
+        ),
+      };
+    }
+
 
     case "scopeItem/remove": {
       const item = state.scopeItems.find((i) => i.id === action.id);
