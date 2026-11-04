@@ -46,7 +46,7 @@ describe("create modified version", () => {
     s = reducer(s, { type: "scope/create", version: makeVersion("d1", "draft", 2), items: [] });
     s = reducer(s, { type: "scope/create", version: makeVersion("d2", "draft", 3), items: [], supersedeId: "d1" });
     expect(s.scopeVersions.find((v) => v.id === "d1")?.status).toBe("superseded");
-    expect(s.scopeVersions.filter((v) => v.status === "draft").map((v) => v.id)).toEqual(["d2"]);
+    expect(s.scopeVersions.filter((v) => v.project_id === "prj-habba" && v.status === "draft").map((v) => v.id)).toEqual(["d2"]);
   });
 
   it("keeps the approved version approved when a modified draft is created from it", () => {

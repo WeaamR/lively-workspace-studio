@@ -19,11 +19,16 @@ describe("scope rules", () => {
     expect(s.revision_limit).toBe(2);
     expect(s.inclusions?.length).toBeGreaterThan(0);
   });
-  it("saving a draft creates a new draft version and never approves", () => {
+  it("saving a draft updates it in place and never approves or sends", () => {
     const v0: ScopeVersion = { id: "a", project_id: "p", version_number: 1, status: "draft" as const, delivery_deadline: null, revision_rounds: 2, notes: "", created_at: "", sent_at: null, approved_at: null };
     const base = { ...initialData, scopeVersions: [v0] };
-    const next = reducer(base, { type: "scope/saveAsNew", fromId: "a", version: { ...v0, id: "b", version_number: 2 }, items: [] });
-    expect(next.scopeVersions.find((v) => v.id === "b")!.status).toBe("draft");
-    expect(next.scopeVersions.some((v) => v.status === "approved" || v.status === "pending_approval")).toBe(false);
+    const next = reducer(base, { type: "scope/saveDraft", id: "a" });
+    expect(next.scopeVersions.length).toBe(1);
+    const v = next.scopeVersions[0]!;
+    expect(v.id).toBe("a");
+    expect(v.version_number).toBe(1);
+    expect(v.status).toBe("draft");
+    expect(v.approved_at).toBeNull();
+    expect(v.sent_at).toBeNull();
   });
 });
