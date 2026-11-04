@@ -417,7 +417,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      approve_scope_version: {
+        Args: { p_scope_version_id: string }
+        Returns: string
+      }
+      get_scope_unresolved_items: {
+        Args: { p_scope_version_id: string }
+        Returns: {
+          category: string
+          description: string
+          item_id: string
+          sort_order: number
+          title: string
+        }[]
+      }
+      resolve_scope_item: {
+        Args: {
+          p_item_id: string
+          p_new_category: string
+          p_new_description?: string
+          p_new_title: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

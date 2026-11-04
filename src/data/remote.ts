@@ -427,10 +427,17 @@ export async function persistAction(action: Action, prev: AppData, next: AppData
       return;
     }
 
-    case "scope/create":
+    case "scope/create": {
+      if (next.scopeVersions.length === prev.scopeVersions.length) return; // rejected by reducer
+      // Supersede the previous unapproved working draft, if any.
+      const sup = action.supersedeId ? prev.scopeVersions.find((v) => v.id === action.supersedeId) : null;
+      if (sup && !sup.approved_at && (sup.status === "draft" || sup.status === "pending_approval")) {
+        check(await supabase.from("scope_versions").update({ status: "superseded" }).eq("id", sup.id).is("approved_at", null));
+      }
       check(await supabase.from("scope_versions").insert(versionToDb(action.version, userId)));
       if (action.items.length) check(await supabase.from("scope_items").insert(itemRows(action.items, userId)));
       return;
+    }
 
     case "scope/update": {
       const v = next.scopeVersions.find((x) => x.id === action.id);
@@ -440,12 +447,8 @@ export async function persistAction(action: Action, prev: AppData, next: AppData
       return;
     }
 
-    case "scope/saveAsNew":
-      if (next.scopeVersions.length === prev.scopeVersions.length) return; // rejected by reducer
-      check(await supabase.from("scope_versions").update({ status: "superseded" }).eq("id", action.fromId));
-      check(await supabase.from("scope_versions").insert(versionToDb(action.version, userId)));
-      if (action.items.length) check(await supabase.from("scope_items").insert(itemRows(action.items, userId)));
-      return;
+    case "scope/saveDraft":
+      return; // draft fields/items are already persisted by their own actions
 
     case "scope/send":
     case "scope/revertToDraft":
@@ -465,10 +468,18 @@ export async function persistAction(action: Action, prev: AppData, next: AppData
     }
 
     case "scope/delete": {
-      if (next.scopeVersions.some((v) => v.id === action.id)) return; // rejected by reducer (not a draft)
-      // Remove items explicitly (works with or without ON DELETE CASCADE), then the draft row.
+      if (next.scopeVersions.some((v) => v.id === action.id)) return; // rejected by reducer
+      // Remove items explicitly (works with or without ON DELETE CASCADE), then the
+      // version row — guarded so only never-approved drafts/superseded rows go.
       check(await supabase.from("scope_items").delete().eq("scope_version_id", action.id));
-      check(await supabase.from("scope_versions").delete().eq("id", action.id).eq("status", "draft"));
+      check(
+        await supabase
+          .from("scope_versions")
+          .delete()
+          .eq("id", action.id)
+          .is("approved_at", null)
+          .in("status", ["draft", "superseded"]),
+      );
       return;
     }
 

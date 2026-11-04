@@ -153,7 +153,12 @@ function useCreateActions(dispatch: (a: Action) => void, getState: () => AppData
         return true;
       },
 
-      /** New draft version, copied from the latest version or seeded from the project's service. */
+      /**
+       * The only action that creates a new version ("إنشاء نسخة معدّلة").
+       * Copies the latest version (or seeds from the project's service), assigns
+       * MAX(version_number) + 1, and supersedes a previous unapproved draft so
+       * only one working draft exists. An approved version stays approved.
+       */
       createScopeVersion(projectId: string) {
         const project = getState().projects.find((p) => p.id === projectId);
         const prev = latestVersion(getState().scopeVersions, projectId);
@@ -201,7 +206,9 @@ function useCreateActions(dispatch: (a: Action) => void, getState: () => AppData
             list.map((content, position) => ({ id: newId(), scope_version_id: versionId, category, content, position })),
           );
         }
-        dispatch({ type: "scope/create", version, items });
+        const supersedeId =
+          prev && !prev.approved_at && (prev.status === "draft" || prev.status === "pending_approval") ? prev.id : undefined;
+        dispatch({ type: "scope/create", version, items, supersedeId });
         return versionId;
       },
 
@@ -222,36 +229,27 @@ function useCreateActions(dispatch: (a: Action) => void, getState: () => AppData
         dispatch({ type: "scope/revertToDraft", id });
       },
 
-      /** Saves the current draft as a new draft version; the previous draft is kept as history. Never sends or approves. */
-      saveScopeDraft(id: string) {
+      /**
+       * Saves the draft in place: same record, same version number, no new
+       * version, no status change. Edits are already persisted incrementally,
+       * so this confirms the save. Never sends or approves.
+       */
+      saveScopeDraft(id: string): boolean {
         const from = getState().scopeVersions.find((x) => x.id === id);
-        if (!from || from.status !== "draft") return null;
-        const prev = latestVersion(getState().scopeVersions, from.project_id);
-        const versionId = newId();
-        const version: ScopeVersion = {
-          ...from,
-          id: versionId,
-          version_number: (prev?.version_number ?? from.version_number) + 1,
-          status: "draft",
-          created_at: nowIso(),
-          sent_at: null,
-          approved_at: null,
-        };
-        const items = getState().scopeItems
-          .filter((i) => i.scope_version_id === id)
-          .map((i) => ({ ...i, id: newId(), scope_version_id: versionId }));
-        dispatch({ type: "scope/saveAsNew", fromId: id, version, items });
-        return version.version_number;
+        if (!from || from.status !== "draft") return false;
+        dispatch({ type: "scope/saveDraft", id });
+        return true;
       },
 
       /**
-       * Deletes a draft scope version with its items. Blocked when the version
-       * is not a draft or when a recorded change review references it.
+       * Deletes a never-approved draft or superseded version with its items.
+       * Blocked when the version was ever approved, is sent/approved, or when
+       * a recorded change review references it.
        */
       deleteScopeDraft(id: string): { ok: boolean; reason?: "not_draft" | "referenced" } {
         const state = getState();
         const v = state.scopeVersions.find((x) => x.id === id);
-        if (!v || v.status !== "draft") return { ok: false, reason: "not_draft" };
+        if (!v || v.approved_at || (v.status !== "draft" && v.status !== "superseded")) return { ok: false, reason: "not_draft" };
         const referenced = state.messages.some((m) => m.change_analysis?.scope_version_id === id);
         if (referenced) return { ok: false, reason: "referenced" };
         dispatch({ type: "scope/delete", id });

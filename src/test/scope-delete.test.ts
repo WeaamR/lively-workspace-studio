@@ -48,14 +48,31 @@ describe("scope draft deletion", () => {
     expect(after).toBe(s);
   });
 
-  it("never deletes superseded versions", () => {
+  it("never deletes a superseded version that was once approved", () => {
     let s = clone();
     s = reducer(s, { type: "scope/create", version: makeVersion("draft-2", "draft", 2), items: [] });
     s = reducer(s, { type: "scope/approve", id: "draft-2", at: "2026-11-02T00:00:00Z" });
-    // sv-habba-1 is now superseded.
-    expect(s.scopeVersions.find((v) => v.id === "sv-habba-1")?.status).toBe("superseded");
+    // sv-habba-1 is now superseded but keeps its approved_at.
+    const prev = s.scopeVersions.find((v) => v.id === "sv-habba-1")!;
+    expect(prev.status).toBe("superseded");
+    expect(prev.approved_at).toBeTruthy();
     const after = reducer(s, { type: "scope/delete", id: "sv-habba-1" });
     expect(after).toBe(s);
+  });
+
+  it("deletes a superseded draft that was never approved, with its items", () => {
+    let s = clone();
+    s = reducer(s, {
+      type: "scope/create",
+      version: makeVersion("draft-4", "draft", 2),
+      items: [{ id: "draft-4-item", scope_version_id: "draft-4", category: "deliverable", content: "مخرج", position: 0 }],
+    });
+    s = reducer(s, { type: "scope/create", version: makeVersion("draft-5", "draft", 3), items: [], supersedeId: "draft-4" });
+    expect(s.scopeVersions.find((v) => v.id === "draft-4")?.status).toBe("superseded");
+    s = reducer(s, { type: "scope/delete", id: "draft-4" });
+    expect(s.scopeVersions.some((v) => v.id === "draft-4")).toBe(false);
+    expect(s.scopeItems.some((i) => i.scope_version_id === "draft-4")).toBe(false);
+    expect(s.scopeVersions.some((v) => v.id === "draft-5")).toBe(true);
   });
 
   it("never deletes a version sent for approval", () => {

@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { EmptyState } from "@/components/common/empty-state";
 import { ListEditor } from "@/components/common/list-editor";
 import { Notice } from "@/components/common/notice";
-import { ScopeStatusBadge } from "@/components/common/status-badges";
+import { ScopeStatusBadge, VersionStateBadge } from "@/components/common/status-badges";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -101,13 +101,13 @@ function ScopePage() {
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-sm font-medium">النسخة {v.version_number}</span>
-                    <ScopeStatusBadge status={v.status} />
+                    <VersionStateBadge version={v} />
                   </div>
                   <div className="num mt-1 text-xs text-muted-foreground">
                     {v.approved_at ? `اعتُمدت ${formatDate(v.approved_at)}` : `أُنشئت ${formatDate(v.created_at)}`}
                   </div>
                 </button>
-                {v.status === "draft" && <DeleteDraftButton version={v} />}
+                {!v.approved_at && (v.status === "draft" || v.status === "superseded") && <DeleteDraftButton version={v} />}
               </li>
             ))}
           </ul>
@@ -132,12 +132,14 @@ function ScopePage() {
               {editable ? "مسودة قابلة للتعديل. البنود مرقّمة ليُشار إليها عند كشف التغييرات." : "هذه النسخة مقفلة للقراءة فقط."}
             </p>
           </div>
-          <VersionActions version={version} itemCount={items.length} />
+          <VersionActions version={version} itemCount={items.length} projectId={project.id} />
         </div>
 
         {version.status === "superseded" && (
-          <Notice tone="info" title="نسخة سابقة">
-            استُبدلت هذه النسخة بنسخة أحدث معتمدة. تُعرض هنا للرجوع إليها فقط.
+          <Notice tone="info" title={version.approved_at ? "نسخة سبق اعتمادها" : "نسخة سابقة غير معتمدة"}>
+            {version.approved_at
+              ? `اعتُمدت هذه النسخة في ${formatDate(version.approved_at)} ثم استُبدلت باعتماد نسخة أحدث. تُحفظ للرجوع إليها فقط.`
+              : "استُبدلت هذه المسودة بنسخة أحدث ولم تُعتمد قط. تُعرض هنا للرجوع إليها فقط."}
           </Notice>
         )}
 
@@ -250,7 +252,7 @@ const EMPTY_TEXT: Record<ScopeCategory, string> = {
   open_item: "لا توجد نقاط معلّقة — جميع البنود أعلاه مؤكدة.",
 };
 
-function VersionActions({ version, itemCount }: { version: ScopeVersion; itemCount: number }) {
+function VersionActions({ version, itemCount, projectId }: { version: ScopeVersion; itemCount: number; projectId: string }) {
   const actions = useActions();
 
   if (version.status === "draft") {
@@ -259,12 +261,24 @@ function VersionActions({ version, itemCount }: { version: ScopeVersion; itemCou
         <Button
           variant="outline"
           onClick={() => {
-            const n = actions.saveScopeDraft(version.id);
-            if (n) toast.success(`حُفظت المسودة كنسخة جديدة رقم ${n}`, { description: "لم يُرسل النطاق ولم يُعتمد." });
+            if (actions.saveScopeDraft(version.id))
+              toast.success(`حُفظت المسودة — النسخة ${version.version_number} محدّثة`, {
+                description: "بقي نفس الإصدار بنفس الرقم. لم يُرسل النطاق ولم يُعتمد.",
+              });
           }}
         >
           <Save />
           حفظ المسودة
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() => {
+            actions.createScopeVersion(projectId);
+            toast.success("أُنشئت نسخة معدّلة جديدة", { description: "حُفظت المسودة السابقة كنسخة سابقة غير معتمدة." });
+          }}
+        >
+          <CopyPlus />
+          إنشاء نسخة معدّلة
         </Button>
         <Button
           variant="outline"
@@ -294,6 +308,23 @@ function VersionActions({ version, itemCount }: { version: ScopeVersion; itemCou
     );
   }
 
+  if (version.status === "approved") {
+    return (
+      <div className="flex flex-wrap gap-2">
+        <Button
+          variant="outline"
+          onClick={() => {
+            actions.createScopeVersion(projectId);
+            toast.success("أُنشئت نسخة معدّلة كمسودة", { description: "بقيت النسخة المعتمدة سارية حتى اعتماد النسخة الجديدة." });
+          }}
+        >
+          <CopyPlus />
+          إنشاء نسخة معدّلة
+        </Button>
+      </div>
+    );
+  }
+
   return null;
 }
 
@@ -307,13 +338,13 @@ function DeleteDraftButton({ version }: { version: ScopeVersion }) {
     const res = actions.deleteScopeDraft(version.id);
     setDeleting(false);
     if (res.ok) {
-      toast.success(`حُذفت مسودة النسخة ${version.version_number}`, { description: "حُذفت بنود النطاق المرتبطة بها أيضًا." });
+      toast.success(`حُذفت النسخة ${version.version_number}`, { description: "حُذفت بنود النطاق المرتبطة بها أيضًا." });
     } else if (res.reason === "referenced") {
-      toast.error("لا يمكن حذف هذه المسودة", {
+      toast.error("لا يمكن حذف هذه النسخة", {
         description: "يوجد طلب تغيير مسجّل قورن بهذه النسخة. احذف طلب التغيير أولًا من صفحة كشف التغييرات.",
       });
     } else {
-      toast.error("لا يمكن حذف هذه النسخة", { description: "يمكن حذف المسودات فقط." });
+      toast.error("لا يمكن حذف هذه النسخة", { description: "يمكن حذف المسودات والنسخ السابقة غير المعتمدة فقط." });
     }
   };
 
@@ -324,8 +355,8 @@ function DeleteDraftButton({ version }: { version: ScopeVersion }) {
           variant="ghost"
           size="icon"
           className="size-8 shrink-0 text-muted-foreground hover:text-destructive"
-          title="حذف المسودة"
-          aria-label="حذف المسودة"
+          title="حذف النسخة"
+          aria-label="حذف النسخة"
           disabled={deleting}
         >
           {deleting ? <Loader2 className="animate-spin" /> : <Trash2 />}
@@ -333,9 +364,10 @@ function DeleteDraftButton({ version }: { version: ScopeVersion }) {
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>حذف مسودة النطاق</AlertDialogTitle>
+          <AlertDialogTitle>حذف نسخة النطاق</AlertDialogTitle>
           <AlertDialogDescription>
-            هل أنت متأكد من حذف هذه المسودة؟ سيتم حذف بنود النطاق المرتبطة بها أيضًا.
+            هل أنت متأكد من حذف النسخة {version.version_number}؟ سيتم حذف بنود النطاق المرتبطة بها أيضًا، ولن يتأثر
+            المشروع أو رسائل العميل أو النسخ الأخرى.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="gap-2">
