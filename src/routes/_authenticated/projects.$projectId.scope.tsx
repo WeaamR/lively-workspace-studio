@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { EmptyState } from "@/components/common/empty-state";
 import { ListEditor } from "@/components/common/list-editor";
 import { Notice } from "@/components/common/notice";
-import { ScopeStatusBadge } from "@/components/common/status-badges";
+import { ScopeStatusBadge, VersionStateBadge } from "@/components/common/status-badges";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -101,13 +101,13 @@ function ScopePage() {
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-sm font-medium">النسخة {v.version_number}</span>
-                    <ScopeStatusBadge status={v.status} />
+                    <VersionStateBadge version={v} />
                   </div>
                   <div className="num mt-1 text-xs text-muted-foreground">
                     {v.approved_at ? `اعتُمدت ${formatDate(v.approved_at)}` : `أُنشئت ${formatDate(v.created_at)}`}
                   </div>
                 </button>
-                {v.status === "draft" && <DeleteDraftButton version={v} />}
+                {!v.approved_at && (v.status === "draft" || v.status === "superseded") && <DeleteDraftButton version={v} />}
               </li>
             ))}
           </ul>
@@ -132,12 +132,14 @@ function ScopePage() {
               {editable ? "مسودة قابلة للتعديل. البنود مرقّمة ليُشار إليها عند كشف التغييرات." : "هذه النسخة مقفلة للقراءة فقط."}
             </p>
           </div>
-          <VersionActions version={version} itemCount={items.length} />
+          <VersionActions version={version} itemCount={items.length} projectId={project.id} />
         </div>
 
         {version.status === "superseded" && (
-          <Notice tone="info" title="نسخة سابقة">
-            استُبدلت هذه النسخة بنسخة أحدث معتمدة. تُعرض هنا للرجوع إليها فقط.
+          <Notice tone="info" title={version.approved_at ? "نسخة سبق اعتمادها" : "نسخة سابقة غير معتمدة"}>
+            {version.approved_at
+              ? `اعتُمدت هذه النسخة في ${formatDate(version.approved_at)} ثم استُبدلت باعتماد نسخة أحدث. تُحفظ للرجوع إليها فقط.`
+              : "استُبدلت هذه المسودة بنسخة أحدث ولم تُعتمد قط. تُعرض هنا للرجوع إليها فقط."}
           </Notice>
         )}
 
