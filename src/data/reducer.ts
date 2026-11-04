@@ -23,7 +23,7 @@ export type Action =
   | { type: "project/delete"; id: string }
   | { type: "message/add"; message: ProjectMessage }
   | { type: "message/update"; id: string; patch: Partial<ProjectMessage> }
-  | { type: "scope/create"; version: ScopeVersion; items: ScopeItem[]; supersedeId?: string }
+  | { type: "scope/create"; version: ScopeVersion; items: ScopeItem[]; supersedeId?: string | undefined }
   | { type: "scope/update"; id: string; patch: Partial<Pick<ScopeVersion, "delivery_deadline" | "revision_rounds" | "notes" | "deadline_status" | "deadline_note">> }
   | { type: "scope/saveDraft"; id: string }
   | { type: "scope/send"; id: string; at: string }
