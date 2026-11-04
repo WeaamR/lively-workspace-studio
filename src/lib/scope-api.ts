@@ -34,7 +34,6 @@ export interface ResolveScopeItemInput {
 export interface ScopeAnalysisResponse {
   success: true;
   model: string;
-  analysis_id: string;
   analysis: Record<string, unknown>;
 }
 
@@ -43,7 +42,6 @@ export interface ScopeChangesResponse {
   model: string;
   scope_version_id: string;
   version_number: number;
-  review_id: string;
   analysis: Record<string, unknown>;
 }
 
