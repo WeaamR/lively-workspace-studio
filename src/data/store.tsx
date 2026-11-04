@@ -29,8 +29,11 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 import { emptyData } from "./empty";
-import { loadAppData, persistAction } from "./remote";
-import { reducer, type Action } from "./reducer";
+import {
+  loadAppData,
+  persistAction,
+  resolveScopeItemRecord,
+} from "./remote";import { reducer, type Action } from "./reducer";
 
 
 export interface NewProjectInput {
@@ -279,6 +282,59 @@ function useCreateActions(dispatch: (a: Action) => void, getState: () => AppData
       updateScopeItem(id: string, content: string) {
         dispatch({ type: "scopeItem/update", id, content });
       },
+
+      
+async resolveScopeItem(input: {
+  itemId: string;
+  answer: string;
+  resolvedCategory: Exclude<ScopeCategory, "condition" | "open_item">;
+  resolvedTitle: string;
+  resolvedDescription: string;
+  confirmedByFreelancer: boolean;
+}) {
+  const state = getState();
+
+  const item = state.scopeItems.find(
+    (i) => i.id === input.itemId
+  );
+
+  if (!item || item.category !== "open_item") {
+    throw new Error("هذا البند ليس بندًا غير محسوم.");
+  }
+
+  const version = state.scopeVersions.find(
+    (v) => v.id === item.scope_version_id
+  );
+
+  if (!version || version.status !== "draft") {
+    throw new Error("يمكن حسم البنود داخل المسودات فقط.");
+  }
+
+  if (!input.confirmedByFreelancer) {
+    throw new Error("يجب تأكيد مراجعة المستقل أولًا.");
+  }
+
+  // Persist through the authenticated Edge Function.
+  await resolveScopeItemRecord({
+    item_id: item.id,
+    answer: input.answer,
+    resolved_category: input.resolvedCategory,
+    resolved_title: input.resolvedTitle,
+    resolved_description: input.resolvedDescription,
+    confirmed_by_freelancer: true,
+  });
+
+  // Update local state only after the server confirms success.
+  dispatch({
+    type: "scopeItem/resolve",
+    id: item.id,
+    resolved_category: input.resolvedCategory,
+    resolved_title: input.resolvedTitle,
+  });
+
+  return true;
+},
+
 
       removeScopeItem(id: string) {
         dispatch({ type: "scopeItem/remove", id });
